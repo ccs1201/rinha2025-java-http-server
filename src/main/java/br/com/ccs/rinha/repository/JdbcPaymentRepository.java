@@ -166,6 +166,7 @@ public class JdbcPaymentRepository {
             stmt.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
+            log.error("Error on purge {}", e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }
