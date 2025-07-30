@@ -13,7 +13,6 @@
         <maven.compiler.target>24</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <graalvm.version>24.0.2</graalvm.version>
-        <exec.mainClass>br.com.ccs.rinha.Main</exec.mainClass>
         <slf4j.version>2.0.16</slf4j.version>
         <logback-classic.version>1.5.13</logback-classic.version>
     </properties>
@@ -61,40 +60,50 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>${exec.mainClass}</mainClass>
+                            <mainClass>br.com.ccs.rinha.App</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.graalvm.buildtools</groupId>
-                <artifactId>native-maven-plugin</artifactId>
-                <version>0.10.6</version>
-                <extensions>true</extensions>
-                <executions>
-                    <execution>
-                        <id>build-native</id>
-                        <goals>
-                            <goal>compile-native</goal>
-                        </goals>
-                        <phase>package</phase>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>native</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <version>0.11.0</version>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                        </executions>
                         <configuration>
                             <buildArgs>
                                 --enable-url-protocols=http,https
                                 --no-fallback
                                 --enable-preview
                                 --enable-http --enable-https
+                                -O2
                                 -H:+ReportExceptionStackTraces
-                                -H:Name=${project.artifactId}
                                 -H:+AllowIncompleteClasspath
                                 -H:+TraceClassInitialization
                             </buildArgs>
-                            <mainClass>${exec.mainClass}</mainClass>
+                            <mainClass>br.com.ccs.rinha.App</mainClass>
                         </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

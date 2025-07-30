@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-public class Main {
-    private static final Logger log = LoggerFactory.getLogger(Main.class);
+public class App {
+    private static final Logger log = LoggerFactory.getLogger(App.class);
 
     public static void main(String[] args) throws IOException {
         int port = Integer.parseInt(System.getenv().getOrDefault("SERVER_PORT", "8080"));
