@@ -16,8 +16,8 @@ public class PaymentProcessorClient {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessorClient.class);
 
-    private static final String contentType = "Content-Type";
-    private static final String contentTypeValue = "application/json";
+    private static final String CONTENT_TYPE = "Content-Type";
+    private static final String CONTENT_TYPE_VALUE = "application/json";
 
     private final JdbcPaymentRepository repository;
     private final HttpClient httpClient;
@@ -25,6 +25,9 @@ public class PaymentProcessorClient {
     private final URI defaultUri;
     private final URI fallbackUri;
     private final ArrayBlockingQueue<PaymentRequest> queues[];
+    private final int timeOut;
+    private final int queueCapacity;
+
 
     static {
         instance = new PaymentProcessorClient();
@@ -43,12 +46,14 @@ public class PaymentProcessorClient {
         fallbackUrl = fallbackUrl.concat("/payments");
 
         var workers = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_WORKERS"));
+        this.timeOut = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_REQUEST_TIMEOUT"));
+        this.queueCapacity = Integer.parseInt(System.getenv("PAYMENT_QUEUE"));
 
         this.repository = JdbcPaymentRepository.getInstance();
 
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
-                .connectTimeout(Duration.ofMillis(1000))
+                .connectTimeout(Duration.ofMillis(timeOut))
                 .build();
 
         defaultUri = URI.create(defaultUrl);
@@ -57,7 +62,7 @@ public class PaymentProcessorClient {
         queues = new ArrayBlockingQueue[workers];
 
         for (int i = 0; i < workers; i++) {
-            var queue = queues[i] = new ArrayBlockingQueue<>(1_000);
+            var queue = queues[i] = new ArrayBlockingQueue<>(queueCapacity);
             startWorkers(i, queue);
         }
 
@@ -96,7 +101,7 @@ public class PaymentProcessorClient {
 
         var request = HttpRequest.newBuilder()
                 .uri(defaultUri)
-                .header(contentType, contentTypeValue)
+                .header(CONTENT_TYPE, CONTENT_TYPE_VALUE)
                 .version(HttpClient.Version.HTTP_1_1)
                 .timeout(Duration.ofMillis(3000))
                 .POST(HttpRequest.BodyPublishers.ofString(paymentRequest.getJson()))
@@ -118,7 +123,7 @@ public class PaymentProcessorClient {
         paymentRequest.setDefaultFalse();
         var request = HttpRequest.newBuilder()
                 .uri(fallbackUri)
-                .header(contentType, contentTypeValue)
+                .header(CONTENT_TYPE, CONTENT_TYPE_VALUE)
                 .version(HttpClient.Version.HTTP_2)
                 .timeout(Duration.ofMillis(1000))
                 .POST(HttpRequest.BodyPublishers.ofString(paymentRequest.getJson()))

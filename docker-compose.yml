@@ -3,7 +3,7 @@ x-backend-templates:
 #    build:
 #      context: .
 #      dockerfile: Dockerfile
-    image: java-http-server-postgres
+    image: csouzadocker/java-http-server-postgres
     depends_on:
       backend-db:
         condition: service_healthy
@@ -18,8 +18,8 @@ x-backend-templates:
 
   app-env: &app-env
     DATASOURCE_CLASS_NAME: "org.postgresql.Driver"
-    DATASOURCE_MAXIMUM_POOL_SIZE: "10"
-    DATASOURCE_MINIMUM_IDLE: "10"
+    DATASOURCE_MAXIMUM_POOL_SIZE: "15"
+    DATASOURCE_MINIMUM_IDLE: "15"
     DATASOURCE_PASSWORD: "rinha"
     DATASOURCE_TIMEOUT: "20000"
     DATASOURCE_URL: "jdbc:postgresql://postgres:5432/rinha"
@@ -27,9 +27,9 @@ x-backend-templates:
     PAYMENT_PROCESSOR_DEFAULT_URL: "http://payment-processor-default:8080"
     PAYMENT_PROCESSOR_FALLBACK_URL: "http://payment-processor-fallback:8080"
     PAYMENT_PROCESSOR_WORKERS: "1"
-    SERVER_IO_THREADS: "4"
+    PAYMENT_PROCESSOR_REQUEST_TIMEOUT: "5000"
+    PAYMENT_QUEUE: "100"
     SERVER_PORT: "8080"
-    SERVER_WORKER_THREADS: "8"
     THREAD_POOL_SIZE: "8"
     THREAD_QUEUE_SIZE: "500"
 

@@ -27,5 +27,8 @@ fi
 echo "Build concluído. Executável nativo gerado em target/rinha-backend-pure-java."
 echo "Para executar: ./target/rinha-backend-pure-java"
 
+
+docker build -t csouzadocker/java-http-server-postgres .
+
 # Exemplo de execução (opcional, remova para o Dockerfile)
 # ./target/rinha-backend-pure-java

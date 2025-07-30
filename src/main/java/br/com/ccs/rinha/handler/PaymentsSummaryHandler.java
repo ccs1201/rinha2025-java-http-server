@@ -2,15 +2,14 @@ package br.com.ccs.rinha.handler;
 
 import br.com.ccs.rinha.repository.JdbcPaymentRepository;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 
-public class PaymentsSummaryHandler extends BaseHandler {
+public class PaymentsSummaryHandler implements HttpHandler {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentsSummaryHandler.class);
 
@@ -22,18 +21,19 @@ public class PaymentsSummaryHandler extends BaseHandler {
 
         var q = exchange.getRequestURI().getQuery();
         try {
-
             var from = DateParser.parseFrom(q);
             var to = DateParser.parseTo(q);
+
             var response = repository.getSummary(from, to);
-            sendResponse(exchange, response.toJson());
+
+            HandlerUtil.sendResponse(exchange, response.toJson());
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }
 
-    private final class DateParser {
+    private static final class DateParser {
 
         public static OffsetDateTime parseFrom(CharSequence input) {
             int start = 5; // after "from="
