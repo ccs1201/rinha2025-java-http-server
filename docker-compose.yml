@@ -3,7 +3,7 @@ x-backend-templates:
 #    build:
 #      context: .
 #      dockerfile: Dockerfile
-    image: csouzadocker/rinha-backend-2025-puro:0.0.1
+    image: java-http-server-postgres
     depends_on:
       backend-db:
         condition: service_healthy
