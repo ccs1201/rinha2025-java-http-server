@@ -78,12 +78,13 @@ public class JdbcPaymentRepository {
                 while (!Thread.currentThread().isInterrupted()) {
                     try {
                         if (queue.size() >= 10) {
-                            executeinBatch(queue, stmt, conn);
+                            executeInBatch(queue, stmt, conn);
                             continue;
                         }
                         executeSingleInsert(queue.take(), stmt, conn);
 
                     } catch (Exception e) {
+                        conn.rollback();
                         log.error("Error inserting payment", e);
                     }
                 }
@@ -101,7 +102,7 @@ public class JdbcPaymentRepository {
         }
     }
 
-    private static void executeinBatch(ArrayBlockingQueue<PaymentRequest> queue, PreparedStatement stmt, Connection conn) throws SQLException {
+    private static void executeInBatch(ArrayBlockingQueue<PaymentRequest> queue, PreparedStatement stmt, Connection conn) throws SQLException {
         long now = System.currentTimeMillis();
         List<PaymentRequest> batch = new ArrayList<>(100);
         queue.drainTo(batch, 100);
@@ -131,7 +132,6 @@ public class JdbcPaymentRepository {
         stmt.execute();
         conn.commit();
     }
-
 
 
     public PaymentSummary getSummary(OffsetDateTime from, OffsetDateTime to) {

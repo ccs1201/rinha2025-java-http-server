@@ -5,6 +5,8 @@ import br.com.ccs.rinha.config.ExecutorConfig;
 import br.com.ccs.rinha.handler.PaymentsHandler;
 import br.com.ccs.rinha.handler.PaymentsSummaryHandler;
 import br.com.ccs.rinha.handler.PurgeHandler;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,7 @@ public class App {
 
     public static void main(String[] args) throws IOException {
         int port = Integer.parseInt(System.getenv().getOrDefault("SERVER_PORT", "8080"));
+        log.info("Starting server on port: {}", port);
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         var executor = ExecutorConfig.getExecutor();
@@ -42,4 +45,14 @@ public class App {
             log.info("Servidor desligado.");
         }));
     }
+
+    private static void setLogLevel(){
+        // Obter o contexto do Logback
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+        // Definir o nível de log do HikariCP para INFO (ou WARN, ERROR)
+        // Isso desativará os logs de DEBUG, TRACE, etc.
+        loggerContext.getLogger("com.zaxxer.hikari").setLevel(Level.OFF);
+    }
+
 }

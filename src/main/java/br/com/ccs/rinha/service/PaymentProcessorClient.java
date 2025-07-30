@@ -2,6 +2,7 @@ package br.com.ccs.rinha.service;
 
 import br.com.ccs.rinha.model.input.PaymentRequest;
 import br.com.ccs.rinha.repository.JdbcPaymentRepository;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
@@ -13,7 +14,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class PaymentProcessorClient {
 
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(PaymentProcessorClient.class);
+    private static final Logger log = LoggerFactory.getLogger(PaymentProcessorClient.class);
 
     private static final String contentType = "Content-Type";
     private static final String contentTypeValue = "application/json";
@@ -62,6 +63,7 @@ public class PaymentProcessorClient {
 
         log.info("Default service URL: {} ", defaultUrl);
         log.info("Fallback fallback URL: {}", fallbackUrl);
+        log.info("Payment processor workers: {}", workers);
     }
 
     private void startWorkers(int wokerIndex, ArrayBlockingQueue<PaymentRequest> queue) {

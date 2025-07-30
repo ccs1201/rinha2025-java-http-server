@@ -18,44 +18,22 @@ x-backend-templates:
 
   app-env: &app-env
     DATASOURCE_CLASS_NAME: "org.postgresql.Driver"
-    DATASOURCE_MAXIMUM_POOL_SIZE: "10"
-    DATASOURCE_MINIMUM_IDLE: "10"
+    DATASOURCE_MAXIMUM_POOL_SIZE: "5"
+    DATASOURCE_MINIMUM_IDLE: "5"
     DATASOURCE_PASSWORD: "rinha"
     DATASOURCE_TIMEOUT: "2000"
     DATASOURCE_URL: "jdbc:postgresql://postgres:5432/rinha"
     DATASOURCE_USERNAME: "rinha"
     PAYMENT_PROCESSOR_DEFAULT_URL: "http://payment-processor-default:8080"
     PAYMENT_PROCESSOR_FALLBACK_URL: "http://payment-processor-fallback:8080"
-    PAYMENT_PROCESSOR_WORKERS: "10"
-    SERVER_IO_THREADS: "2"
-    SERVER_PORT: "9999"
-    SERVER_WORKER_THREADS: "4"
-    THREAD_POOL_SIZE: "10"
+    PAYMENT_PROCESSOR_WORKERS: "2"
+    SERVER_IO_THREADS: "4"
+    SERVER_PORT: "8080"
+    SERVER_WORKER_THREADS: "8"
+    THREAD_POOL_SIZE: "8"
     THREAD_QUEUE_SIZE: "500"
-    JAVA_OPTS: >
-      -Xmx100m
-      -Xms100m
-      -XX:MaxMetaspaceSize=20m
-      -XX:MaxGCPauseMillis=200
-      -Xss512k
-      -XX:+UseG1GC
-      -XX:+UseCompressedOops
-      -XX:+UseCompressedClassPointers
-      -XX:+AlwaysPreTouch
-      -Xbatch
-      -XX:+UnlockExperimentalVMOptions
-      -XX:+UnlockDiagnosticVMOptions
-      -XX:+UseFastUnorderedTimeStamps
-      -XX:+ExitOnOutOfMemoryError
-      -XX:+TieredCompilation
-      -XX:TieredStopAtLevel=1
-      -XX:CompileThreshold=500
-      -XX:+HeapDumpOnOutOfMemoryError
-    #    -XX:+UseNUMA \
-    #    -XX:+PrintCompilation
-    #    -XX:+PrintTieredEvents
-    #    -XX:+PrintCodeCache
-    #    -XX:+PrintInlining
+
+#############################################################################################
 
 services:
   nginx:
