@@ -25,7 +25,7 @@ public class DataSourceFactory {
         return poolSize;
     }
 
-    public static DataSource getInstance() {
+    public static HikariDataSource getInstance() {
         return instance;
     }
 
@@ -59,11 +59,11 @@ public class DataSourceFactory {
         config.setMinimumIdle(minIdle);
         config.setMaximumPoolSize(maxPoolSize);
         config.setConnectionTimeout(dataSourceTimeout);
-        config.setAutoCommit(false);
+        config.setAutoCommit(true);
         config.setValidationTimeout(1000);
         config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "25");
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "50");
+        config.addDataSourceProperty("prepStmtCacheSize", "10");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "20");
         config.addDataSourceProperty("useServerPrepStmts", "true");
         config.addDataSourceProperty("cacheServerConfiguration", "true");
         config.setConnectionTestQuery("SELECT 1");

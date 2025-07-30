@@ -4,6 +4,7 @@ package br.com.ccs.rinha.repository;
 import br.com.ccs.rinha.config.DataSourceFactory;
 import br.com.ccs.rinha.model.input.PaymentRequest;
 import br.com.ccs.rinha.model.output.PaymentSummary;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
@@ -23,7 +24,7 @@ public class JdbcPaymentRepository {
 
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(JdbcPaymentRepository.class.getName());
     private static JdbcPaymentRepository instance;
-    private static DataSource dataSource;
+    private static HikariDataSource dataSource;
     private static final PaymentSummary defaultSummary =
             new PaymentSummary(new PaymentSummary.Summary(0, BigDecimal.ZERO),
                     new PaymentSummary.Summary(0, BigDecimal.ZERO));
@@ -61,11 +62,11 @@ public class JdbcPaymentRepository {
         dataSource = DataSourceFactory.getInstance();
         var poolSize = DataSourceFactory.getPoolSize() - 1;
 
-        for (int i = 0; i < poolSize; i++) {
-            var queue = new ArrayBlockingQueue<PaymentRequest>(1_000);
-            queues[i] = queue;
-            startWorker(i, queue);
-        }
+//        for (int i = 0; i < poolSize; i++) {
+//            var queue = new ArrayBlockingQueue<PaymentRequest>(1_000);
+//            queues[i] = queue;
+//            startWorker(i, queue);
+//        }
         log.info("JdbcPaymentRepository workers started");
     }
 
@@ -94,12 +95,24 @@ public class JdbcPaymentRepository {
         });
     }
 
-    public void save(PaymentRequest paymentRequest) {
-        int index = Math.abs(paymentRequest.hashCode()) % queues.length;
-        boolean accepted = queues[index].offer(paymentRequest);
-        if (!accepted) {
-            log.info(String.format("Payment rejected by queues"));
+    public void save(PaymentRequest pr) {
+//        int index = Math.abs(paymentRequest.hashCode()) % queues.length;
+//        boolean accepted = queues[index].offer(paymentRequest);
+//        if (!accepted) {
+//            log.info(String.format("Payment rejected by queues"));
+//        }
+
+        try (var conn = dataSource.getConnection();
+             var stmt = conn.prepareStatement(SQL_INSERT)) {
+            stmt.setBigDecimal(1, pr.amount);
+            stmt.setObject(2, Timestamp.from(pr.requestedAt));
+            stmt.setBoolean(3, pr.isDefault);
+            stmt.execute();
+        } catch (Exception e) {
+            log.error("Save error {}", e.getMessage(), e);
+            throw new RuntimeException(e);
         }
+
     }
 
     private static void executeInBatch(ArrayBlockingQueue<PaymentRequest> queue, PreparedStatement stmt, Connection conn) throws SQLException {
@@ -130,7 +143,6 @@ public class JdbcPaymentRepository {
         stmt.setObject(2, Timestamp.from(pr.requestedAt));
         stmt.setBoolean(3, pr.isDefault);
         stmt.execute();
-        conn.commit();
     }
 
 
@@ -164,7 +176,6 @@ public class JdbcPaymentRepository {
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.executeUpdate();
-            conn.commit();
         } catch (SQLException e) {
             log.error("Error on purge {}", e.getMessage(), e);
             throw new RuntimeException(e);
