@@ -17,7 +17,7 @@ fi
 echo "Iniciando build do projeto Maven..."
 # Limpa, compila e empacota o JAR, e então gera a imagem nativa
 # O perfil "native" é ativado para usar o plugin do GraalVM
-mvn clean package -Pnative
+mvn clean package -Dnative -Pnative
 
 if [ $? -ne 0 ]; then
   echo "Build do Maven falhou."

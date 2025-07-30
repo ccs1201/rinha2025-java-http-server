@@ -15,6 +15,7 @@
         <graalvm.version>24.0.2</graalvm.version>
         <slf4j.version>2.0.16</slf4j.version>
         <logback-classic.version>1.5.13</logback-classic.version>
+        <main-class>br.com.ccs.rinha.App</main-class>
     </properties>
 
     <dependencies>
@@ -60,7 +61,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>br.com.ccs.rinha.App</mainClass>
+                            <mainClass>${main-class}</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -89,16 +90,17 @@
                         </executions>
                         <configuration>
                             <buildArgs>
-                                --enable-url-protocols=http,https
-                                --no-fallback
-                                --enable-preview
-                                --enable-http --enable-https
+<!--                                &#45;&#45;enable-url-protocols=http,https-->
+<!--                                &#45;&#45;no-fallback-->
+<!--                                &#45;&#45;enable-preview-->
+                                --enable-http
+<!--                                &#45;&#45;enable-https-->
                                 -O2
-                                -H:+ReportExceptionStackTraces
-                                -H:+AllowIncompleteClasspath
-                                -H:+TraceClassInitialization
+<!--                                -H:+ReportExceptionStackTraces-->
+<!--                                -H:+AllowIncompleteClasspath-->
+<!--                                -H:+TraceClassInitialization-->
                             </buildArgs>
-                            <mainClass>br.com.ccs.rinha.App</mainClass>
+                            <mainClass>${main-class}</mainClass>
                         </configuration>
                     </plugin>
                 </plugins>
