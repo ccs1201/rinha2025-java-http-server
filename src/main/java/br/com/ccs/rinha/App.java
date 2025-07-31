@@ -1,6 +1,5 @@
 package br.com.ccs.rinha;
 
-import br.com.ccs.rinha.config.DataSourceFactory;
 import br.com.ccs.rinha.config.ExecutorConfig;
 import br.com.ccs.rinha.handler.PaymentsHandler;
 import br.com.ccs.rinha.handler.PaymentsSummaryHandler;
@@ -40,8 +39,6 @@ public class App {
             if (executor != null) {
                 executor.shutdownNow(); // Encerra o executor das threads
             }
-            DataSourceFactory.close();
-
             log.info("Servidor desligado.");
         }));
     }

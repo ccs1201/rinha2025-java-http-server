@@ -4,9 +4,6 @@ x-backend-templates:
 #      context: .
 #      dockerfile: Dockerfile
     image: csouzadocker/java-http-server-postgres
-    depends_on:
-      backend-db:
-        condition: service_healthy
     networks:
       - backend
       - payment-processor
@@ -14,20 +11,13 @@ x-backend-templates:
       resources:
         limits:
           cpus: "0.6"
-          memory: "117.50MB"
+          memory: "160MB"
 
   app-env: &app-env
-    DATASOURCE_CLASS_NAME: "org.postgresql.Driver"
-    DATASOURCE_MAXIMUM_POOL_SIZE: "3"
-    DATASOURCE_MINIMUM_IDLE: "3"
-    DATASOURCE_PASSWORD: "rinha"
-    DATASOURCE_TIMEOUT: "20000"
-    DATASOURCE_URL: "jdbc:postgresql://postgres:5432/rinha"
-    DATASOURCE_USERNAME: "rinha"
     PAYMENT_PROCESSOR_DEFAULT_URL: "http://payment-processor-default:8080"
     PAYMENT_PROCESSOR_FALLBACK_URL: "http://payment-processor-fallback:8080"
     PAYMENT_PROCESSOR_REQUEST_TIMEOUT: "6000"
-    PAYMENT_PROCESSOR_WORKERS: "4"
+    PAYMENT_PROCESSOR_WORKERS: "2"
     PAYMENT_QUEUE: "1000"
     SERVER_PORT: "8080"
     THREAD_POOL_SIZE: "8"
@@ -54,7 +44,7 @@ services:
       resources:
         limits:
           cpus: "0.1"
-          memory: "15MB"
+          memory: "30MB"
 
   app1:
     <<: *app
@@ -71,32 +61,6 @@ services:
     environment:
       <<: *app-env
       warmup_instance: "app1"
-
-  backend-db:
-    image: postgres:17-alpine
-    container_name: backend-db
-    hostname: postgres
-    environment:
-      POSTGRES_DB: rinha
-      POSTGRES_USER: rinha
-      POSTGRES_PASSWORD: rinha
-    volumes:
-      - ./init.sql/init-backend-db.sql:/docker-entrypoint-initdb.d/init.sql
-#      - ./init.sql/init-config.sh:/docker-entrypoint-initdb.d/init-config.sh
-    ports:
-      - "5432:5432"
-    networks:
-      - backend
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U rinha -d rinha" ]
-      interval: 3s
-      timeout: 3s
-      retries: 10
-    deploy:
-      resources:
-        limits:
-          cpus: "0.2"
-          memory: "100MB"
 
 networks:
   backend:

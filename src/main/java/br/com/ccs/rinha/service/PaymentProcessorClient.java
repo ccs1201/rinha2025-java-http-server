@@ -1,7 +1,8 @@
 package br.com.ccs.rinha.service;
 
 import br.com.ccs.rinha.model.input.PaymentRequest;
-import br.com.ccs.rinha.repository.JdbcPaymentRepository;
+import br.com.ccs.rinha.repository.InMemoeryRespository;
+import br.com.ccs.rinha.workers.PaymentProcessorWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +11,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.concurrent.Executors;
 
 public class PaymentProcessorClient {
 
@@ -18,12 +20,13 @@ public class PaymentProcessorClient {
     private static final String CONTENT_TYPE = "Content-Type";
     private static final String CONTENT_TYPE_VALUE = "application/json";
 
-    private final JdbcPaymentRepository repository;
+    private final InMemoeryRespository repository;
     private final HttpClient httpClient;
     private static final PaymentProcessorClient instance;
     private final URI defaultUri;
     private final URI fallbackUri;
     private final Duration timeOut;
+    private final PaymentProcessorWorker worker = PaymentProcessorWorker.getInstace();
 
 
     static {
@@ -45,16 +48,16 @@ public class PaymentProcessorClient {
 
         this.timeOut = Duration.ofMillis(tOut);
 
-        this.repository = JdbcPaymentRepository.getInstance();
+        this.repository = InMemoeryRespository.getInstance();
 
         this.httpClient = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
-                .connectTimeout(Duration.ofMillis(100))
+                .version(HttpClient.Version.HTTP_2)
+                .connectTimeout(Duration.ofMillis(200))
+                .executor(Executors.newVirtualThreadPerTaskExecutor())
                 .build();
 
         defaultUri = URI.create(defaultUrl);
         fallbackUri = URI.create(fallbackUrl);
-
 
 
         log.info("Default service URL: {} ", defaultUrl);
@@ -62,7 +65,6 @@ public class PaymentProcessorClient {
 
         log.info("Timeout: {}", timeOut);
     }
-
 
 
     public void processPayment(PaymentRequest paymentRequest) {
@@ -82,7 +84,12 @@ public class PaymentProcessorClient {
                 .build();
 
         httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .whenComplete((response, throwable) -> {
+                .whenCompleteAsync((response, throwable) -> {
+
+                    if (throwable != null) {
+                        log.error("Post default error: {}", throwable.getMessage(), throwable);
+                    }
+
                     if (response.statusCode() != 200) {
                         postToFallback(paymentRequest);
                         return;
@@ -102,9 +109,13 @@ public class PaymentProcessorClient {
                 .build();
 
         httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .whenComplete((response, throwable) -> {
+                .whenCompleteAsync((response, throwable) -> {
+
+                    if (throwable != null) {
+                        log.error("Post fallback error: {}", throwable.getMessage(), throwable);
+                    }
                     if (response.statusCode() != 200) {
-                        processPayment(paymentRequest);
+                        worker.offer(paymentRequest);
                         return;
                     }
                     repository.save(paymentRequest);

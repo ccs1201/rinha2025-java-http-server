@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t java-http-server-postgres .
+docker build -t csouzadocker/java-http-server-postgres .

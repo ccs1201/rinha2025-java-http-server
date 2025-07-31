@@ -1,17 +1,16 @@
 package br.com.ccs.rinha.workers;
 
 import br.com.ccs.rinha.model.input.PaymentRequest;
+import br.com.ccs.rinha.model.input.builder.PaymentRequestBuilder;
 import br.com.ccs.rinha.service.PaymentProcessorClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class PaymentProcessorWorker {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessorWorker.class);
-    private final PaymentProcessorClient client = PaymentProcessorClient.getInstance();
 
     private final ArrayBlockingQueue<PaymentRequest>[] queues;
     private static PaymentProcessorWorker instance;
@@ -40,6 +39,7 @@ public class PaymentProcessorWorker {
 
     private void startWorkers(int wokerIndex, ArrayBlockingQueue<PaymentRequest> queue) {
         Thread.ofVirtual().name("payment-processor-" + wokerIndex).start(() -> {
+            var client = PaymentProcessorClient.getInstance();
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     client.processPayment(queue.take());
@@ -52,7 +52,15 @@ public class PaymentProcessorWorker {
     }
 
     public void offer(byte[] data) {
-        var paymentRequest = PaymentRequest.parse(new String(data, StandardCharsets.UTF_8));
+        var paymentRequest = PaymentRequestBuilder.fromBytes(data);
+        offerToQueue(paymentRequest);
+    }
+
+    public void offer(PaymentRequest paymentRequest) {
+        offerToQueue(paymentRequest);
+    }
+
+    private void offerToQueue(PaymentRequest paymentRequest) {
         int index = Math.abs(paymentRequest.hashCode()) % queues.length;
         if (!queues[index].offer(paymentRequest)) {
             log.error("Payment rejected by queue {}", index);

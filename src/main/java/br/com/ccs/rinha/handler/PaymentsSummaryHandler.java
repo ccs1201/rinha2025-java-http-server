@@ -1,6 +1,6 @@
 package br.com.ccs.rinha.handler;
 
-import br.com.ccs.rinha.repository.JdbcPaymentRepository;
+import br.com.ccs.rinha.repository.InMemoeryRespository;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.slf4j.Logger;
@@ -14,7 +14,7 @@ public class PaymentsSummaryHandler implements HttpHandler {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentsSummaryHandler.class);
 
-    private final JdbcPaymentRepository repository = JdbcPaymentRepository.getInstance();
+    private final InMemoeryRespository repository = InMemoeryRespository.getInstance();
 
 
     @Override
