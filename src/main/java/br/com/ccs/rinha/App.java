@@ -52,7 +52,7 @@ public class App {
 
         // Definir o nível de log do HikariCP para INFO (ou WARN, ERROR)
         // Isso desativará os logs de DEBUG, TRACE, etc.
-        loggerContext.getLogger("com.zaxxer.hikari").setLevel(Level.OFF);
+        loggerContext.getLogger("com.zaxxer.hikari").setLevel(Level.WARN);
     }
 
 }

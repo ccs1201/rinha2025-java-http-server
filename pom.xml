@@ -90,15 +90,9 @@
                         </executions>
                         <configuration>
                             <buildArgs>
-<!--                                &#45;&#45;enable-url-protocols=http,https-->
 <!--                                &#45;&#45;no-fallback-->
-<!--                                &#45;&#45;enable-preview-->
                                 --enable-http
-<!--                                &#45;&#45;enable-https-->
                                 -O2
-<!--                                -H:+ReportExceptionStackTraces-->
-<!--                                -H:+AllowIncompleteClasspath-->
-<!--                                -H:+TraceClassInitialization-->
                             </buildArgs>
                             <mainClass>${main-class}</mainClass>
                         </configuration>

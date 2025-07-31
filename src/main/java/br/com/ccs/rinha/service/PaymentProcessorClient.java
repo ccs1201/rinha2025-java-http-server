@@ -25,7 +25,7 @@ public class PaymentProcessorClient {
     private final URI defaultUri;
     private final URI fallbackUri;
     private final ArrayBlockingQueue<PaymentRequest> queues[];
-    private final int timeOut;
+    private final Duration timeOut;
     private final int queueCapacity;
 
 
@@ -46,14 +46,15 @@ public class PaymentProcessorClient {
         fallbackUrl = fallbackUrl.concat("/payments");
 
         var workers = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_WORKERS"));
-        this.timeOut = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_REQUEST_TIMEOUT"));
+        var timeOut = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_REQUEST_TIMEOUT"));
+        this.timeOut = Duration.ofMillis(timeOut);
         this.queueCapacity = Integer.parseInt(System.getenv("PAYMENT_QUEUE"));
 
         this.repository = JdbcPaymentRepository.getInstance();
 
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
-                .connectTimeout(Duration.ofMillis(timeOut))
+                .connectTimeout(Duration.ofMillis(1000))
                 .build();
 
         defaultUri = URI.create(defaultUrl);
@@ -69,6 +70,7 @@ public class PaymentProcessorClient {
         log.info("Default service URL: {} ", defaultUrl);
         log.info("Fallback fallback URL: {}", fallbackUrl);
         log.info("Payment processor workers: {}", workers);
+        log.info("Timeout: {}", timeOut);
     }
 
     private void startWorkers(int wokerIndex, ArrayBlockingQueue<PaymentRequest> queue) {
@@ -103,18 +105,16 @@ public class PaymentProcessorClient {
                 .uri(defaultUri)
                 .header(CONTENT_TYPE, CONTENT_TYPE_VALUE)
                 .version(HttpClient.Version.HTTP_1_1)
-                .timeout(Duration.ofMillis(3000))
+                .timeout(timeOut)
                 .POST(HttpRequest.BodyPublishers.ofString(paymentRequest.getJson()))
                 .build();
 
         httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .whenCompleteAsync((response, throwable) -> {
+                .whenComplete((response, throwable) -> {
                     if (response.statusCode() != 200) {
                         postToFallback(paymentRequest);
-//                        log.info(">>>>>>>>>>>>>>>> Falhou no default não deveria salvar!");
                         return;
                     }
-//                    log.info("Default Salvando");
                     repository.save(paymentRequest);
                 });
     }
@@ -124,13 +124,13 @@ public class PaymentProcessorClient {
         var request = HttpRequest.newBuilder()
                 .uri(fallbackUri)
                 .header(CONTENT_TYPE, CONTENT_TYPE_VALUE)
-                .version(HttpClient.Version.HTTP_2)
-                .timeout(Duration.ofMillis(1000))
+                .version(HttpClient.Version.HTTP_1_1)
+                .timeout(timeOut)
                 .POST(HttpRequest.BodyPublishers.ofString(paymentRequest.getJson()))
                 .build();
 
         httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .whenCompleteAsync((response, throwable) -> {
+                .whenComplete((response, throwable) -> {
                     if (response.statusCode() != 200) {
                         processPayment(paymentRequest);
                         return;

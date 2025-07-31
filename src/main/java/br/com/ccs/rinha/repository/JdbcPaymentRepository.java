@@ -5,15 +5,14 @@ import br.com.ccs.rinha.config.DataSourceFactory;
 import br.com.ccs.rinha.model.input.PaymentRequest;
 import br.com.ccs.rinha.model.output.PaymentSummary;
 import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +21,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class JdbcPaymentRepository {
 
-    private static final org.slf4j.Logger log = LoggerFactory.getLogger(JdbcPaymentRepository.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(JdbcPaymentRepository.class.getName());
     private static JdbcPaymentRepository instance;
     private static HikariDataSource dataSource;
     private static final PaymentSummary defaultSummary =
@@ -62,11 +61,11 @@ public class JdbcPaymentRepository {
         dataSource = DataSourceFactory.getInstance();
         var poolSize = DataSourceFactory.getPoolSize() - 1;
 
-//        for (int i = 0; i < poolSize; i++) {
-//            var queue = new ArrayBlockingQueue<PaymentRequest>(1_000);
-//            queues[i] = queue;
-//            startWorker(i, queue);
-//        }
+        for (int i = 0; i < poolSize; i++) {
+            var queue = new ArrayBlockingQueue<PaymentRequest>(5_000);
+            queues[i] = queue;
+            startWorker(i, queue);
+        }
         log.info("JdbcPaymentRepository workers started");
     }
 
@@ -76,10 +75,14 @@ public class JdbcPaymentRepository {
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(SQL_INSERT)) {
 
+                conn.setAutoCommit(false);
                 while (!Thread.currentThread().isInterrupted()) {
                     try {
                         if (queue.size() >= 10) {
-                            executeInBatch(queue, stmt, conn);
+                            long now = System.currentTimeMillis();
+                            var batch = new ArrayList<PaymentRequest>(100);
+                            queue.drainTo(batch, 100);
+                            executeInBatch(batch, stmt, conn, now);
                             continue;
                         }
                         executeSingleInsert(queue.take(), stmt, conn);
@@ -96,35 +99,20 @@ public class JdbcPaymentRepository {
     }
 
     public void save(PaymentRequest pr) {
-//        int index = Math.abs(paymentRequest.hashCode()) % queues.length;
-//        boolean accepted = queues[index].offer(paymentRequest);
-//        if (!accepted) {
-//            log.info(String.format("Payment rejected by queues"));
-//        }
-
-        try (var conn = dataSource.getConnection();
-             var stmt = conn.prepareStatement(SQL_INSERT)) {
-            stmt.setBigDecimal(1, pr.amount);
-            stmt.setObject(2, Timestamp.from(pr.requestedAt));
-            stmt.setBoolean(3, pr.isDefault);
-            stmt.execute();
-        } catch (Exception e) {
-            log.error("Save error {}", e.getMessage(), e);
-            throw new RuntimeException(e);
+        int index = Math.abs(pr.hashCode()) % queues.length;
+        boolean accepted = queues[index].offer(pr);
+        if (!accepted) {
+            log.info(String.format("Payment rejected by queues"));
         }
-
     }
 
-    private static void executeInBatch(ArrayBlockingQueue<PaymentRequest> queue, PreparedStatement stmt, Connection conn) throws SQLException {
-        long now = System.currentTimeMillis();
-        List<PaymentRequest> batch = new ArrayList<>(100);
-        queue.drainTo(batch, 100);
+    private static void executeInBatch(List<PaymentRequest> batch, PreparedStatement stmt, Connection conn, long now) throws SQLException {
 
         if (batch.isEmpty()) return;
 
         for (PaymentRequest pr : batch) {
             stmt.setBigDecimal(1, pr.amount);
-            stmt.setObject(2, Timestamp.from(pr.requestedAt));
+            stmt.setLong(2, pr.requestedAt);
             stmt.setBoolean(3, pr.isDefault);
             stmt.addBatch();
         }
@@ -134,15 +122,15 @@ public class JdbcPaymentRepository {
 
         long elapsed = System.currentTimeMillis() - now;
         log.info("BATCH Size {} Processed in {}ms Queue size {}",
-                batch.size(), elapsed, queue.size());
+                batch.size(), elapsed, batch.size());
     }
 
-    private static void executeSingleInsert(PaymentRequest pr, PreparedStatement stmt, Connection conn) throws InterruptedException, SQLException {
-
+    private static void executeSingleInsert(PaymentRequest pr, PreparedStatement stmt, Connection conn) throws SQLException {
         stmt.setBigDecimal(1, pr.amount);
-        stmt.setObject(2, Timestamp.from(pr.requestedAt));
+        stmt.setLong(2, pr.requestedAt);
         stmt.setBoolean(3, pr.isDefault);
         stmt.execute();
+        conn.commit();
     }
 
 
@@ -150,8 +138,8 @@ public class JdbcPaymentRepository {
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL_SUMMARY)) {
 
-            stmt.setObject(1, from);
-            stmt.setObject(2, to);
+            stmt.setObject(1, from.toInstant().toEpochMilli());
+            stmt.setObject(2, to.toInstant().toEpochMilli());
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {

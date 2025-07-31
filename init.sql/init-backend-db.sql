@@ -2,7 +2,7 @@ CREATE UNLOGGED TABLE IF NOT EXISTS payments
 (
 --     correlation_id UUID           NOT NULL,
     amount         DECIMAL(10, 2) NOT NULL,
-    requested_at   TIMESTAMP      NOT NULL,
+    requested_at   BIGINT      NOT NULL,
     is_default     BOOLEAN        NOT NULL
 );
 

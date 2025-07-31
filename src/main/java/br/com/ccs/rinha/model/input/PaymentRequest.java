@@ -6,7 +6,7 @@ import java.time.Instant;
 public final class PaymentRequest {
     public String correlationId;
     public BigDecimal amount;
-    public Instant requestedAt;
+    public long requestedAt;
     public boolean isDefault;
 
     private String json;
@@ -41,7 +41,7 @@ public final class PaymentRequest {
         while ((chars[idx] >= '0' && chars[idx] <= '9') || chars[idx] == '.' || chars[idx] == '-') idx++;
 
         req.amount = new BigDecimal(json.substring(startAmount, idx));
-        req.requestedAt = Instant.now();
+        req.requestedAt = System.currentTimeMillis();
         req.setDefaultFalse();
 
         return req;
@@ -52,7 +52,7 @@ public final class PaymentRequest {
         json = sb.append("{")
                 .append("\"correlationId\":\"").append(correlationId).append("\",")
                 .append("\"amount\":").append(amount).append(",")
-                .append("\"requestedAt\":\"").append(requestedAt).append("\"")
+                .append("\"requestedAt\":\"").append(Instant.ofEpochMilli(requestedAt)).append("\"")
                 .append("}")
                 .toString();
     }
