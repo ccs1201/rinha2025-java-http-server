@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
 public class PaymentsSummaryHandler implements HttpHandler {
 
@@ -36,7 +37,12 @@ public class PaymentsSummaryHandler implements HttpHandler {
     private static final class DateParser {
 
         public static OffsetDateTime parseFrom(CharSequence input) {
-            int start = 5; // after "from="
+
+            if (Objects.isNull(input)) {
+                return OffsetDateTime.now().minusMinutes(10);
+            }
+
+            int start = 5;
             int end = input.length();
             for (int i = start; i < input.length(); i++) {
                 if (input.charAt(i) == '&') {
@@ -48,6 +54,9 @@ public class PaymentsSummaryHandler implements HttpHandler {
         }
 
         public static OffsetDateTime parseTo(String input) {
+            if (Objects.isNull(input)) {
+                return OffsetDateTime.now();
+            }
             int start = input.indexOf("&to=") + 4;
             return OffsetDateTime.parse(input.subSequence(start, input.length()));
         }

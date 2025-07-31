@@ -18,6 +18,7 @@ public class App {
     private static final Logger log = LoggerFactory.getLogger(App.class);
 
     public static void main(String[] args) throws IOException {
+        setLogLevel();
         int port = Integer.parseInt(System.getenv().getOrDefault("SERVER_PORT", "8080"));
         log.info("Starting server on port: {}", port);
 
@@ -39,7 +40,6 @@ public class App {
             if (executor != null) {
                 executor.shutdownNow(); // Encerra o executor das threads
             }
-
             DataSourceFactory.close();
 
             log.info("Servidor desligado.");
@@ -47,12 +47,9 @@ public class App {
     }
 
     private static void setLogLevel(){
-        // Obter o contexto do Logback
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        // Definir o nível de log do HikariCP para INFO (ou WARN, ERROR)
-        // Isso desativará os logs de DEBUG, TRACE, etc.
-        loggerContext.getLogger("com.zaxxer.hikari").setLevel(Level.WARN);
+        loggerContext.getLogger("com.zaxxer.hikari").setLevel(Level.ERROR);
     }
 
 }
