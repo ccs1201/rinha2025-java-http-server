@@ -10,7 +10,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.concurrent.ArrayBlockingQueue;
 
 public class PaymentProcessorClient {
 
@@ -24,9 +23,7 @@ public class PaymentProcessorClient {
     private static final PaymentProcessorClient instance;
     private final URI defaultUri;
     private final URI fallbackUri;
-    private final ArrayBlockingQueue<PaymentRequest> queues[];
     private final Duration timeOut;
-    private final int queueCapacity;
 
 
     static {
@@ -44,56 +41,31 @@ public class PaymentProcessorClient {
 
         var fallbackUrl = System.getenv("PAYMENT_PROCESSOR_FALLBACK_URL").trim();
         fallbackUrl = fallbackUrl.concat("/payments");
+        var tOut = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_REQUEST_TIMEOUT"));
 
-        var workers = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_WORKERS"));
-        var timeOut = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_REQUEST_TIMEOUT"));
-        this.timeOut = Duration.ofMillis(timeOut);
-        this.queueCapacity = Integer.parseInt(System.getenv("PAYMENT_QUEUE"));
+        this.timeOut = Duration.ofMillis(tOut);
 
         this.repository = JdbcPaymentRepository.getInstance();
 
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
-                .connectTimeout(Duration.ofMillis(1000))
+                .connectTimeout(Duration.ofMillis(100))
                 .build();
 
         defaultUri = URI.create(defaultUrl);
         fallbackUri = URI.create(fallbackUrl);
 
-        queues = new ArrayBlockingQueue[workers];
 
-        for (int i = 0; i < workers; i++) {
-            var queue = queues[i] = new ArrayBlockingQueue<>(queueCapacity);
-            startWorkers(i, queue);
-        }
 
         log.info("Default service URL: {} ", defaultUrl);
         log.info("Fallback fallback URL: {}", fallbackUrl);
-        log.info("Payment processor workers: {}", workers);
+
         log.info("Timeout: {}", timeOut);
     }
 
-    private void startWorkers(int wokerIndex, ArrayBlockingQueue<PaymentRequest> queue) {
-        Thread.ofVirtual().name("payment-processor-" + wokerIndex).start(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    processPaymentWithRetry(queue.take());
-                } catch (InterruptedException e) {
-                    log.error("worker: {} has error: {}", Thread.currentThread().getName(), e.getMessage(), e);
-                    Thread.currentThread().interrupt();
-                }
-            }
-        });
-    }
+
 
     public void processPayment(PaymentRequest paymentRequest) {
-        int index = Math.abs(paymentRequest.hashCode()) % queues.length;
-        if (!queues[index].offer(paymentRequest)) {
-            log.error("Payment rejected by queue {}", index);
-        }
-    }
-
-    private void processPaymentWithRetry(PaymentRequest paymentRequest) {
         postToDefault(paymentRequest);
     }
 

@@ -110,10 +110,10 @@ public class JdbcPaymentRepository {
 
         if (batch.isEmpty()) return;
 
-        for (PaymentRequest pr : batch) {
-            stmt.setBigDecimal(1, pr.amount);
-            stmt.setLong(2, pr.requestedAt);
-            stmt.setBoolean(3, pr.isDefault);
+        for (int i = 0; i < batch.size(); i++) {
+            stmt.setBigDecimal(1, batch.get(i).amount);
+            stmt.setLong(2, batch.get(i).requestedAt);
+            stmt.setBoolean(3, batch.get(i).isDefault);
             stmt.addBatch();
         }
 
