@@ -17,7 +17,7 @@ public class PaymentProcessorWorker {
     private static PaymentProcessorWorker instance;
 
 
-    public static PaymentProcessorWorker getInstace() {
+    public static PaymentProcessorWorker getInstance() {
         if (instance == null) {
             instance = new PaymentProcessorWorker();
         }

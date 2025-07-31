@@ -93,6 +93,7 @@
 <!--                                &#45;&#45;no-fallback-->
                                 --enable-http
                                 -O2
+                                -march=haswell
                             </buildArgs>
                             <mainClass>${main-class}</mainClass>
                         </configuration>
