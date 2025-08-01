@@ -11,6 +11,11 @@ x-backend-templates:
       - backend
       - payment-processor
     deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 2s
+        max_attempts: 10
+        window: 5s
       resources:
         limits:
           cpus: "0.6"
@@ -28,7 +33,7 @@ x-backend-templates:
     PAYMENT_PROCESSOR_FALLBACK_URL: "http://payment-processor-fallback:8080"
     PAYMENT_PROCESSOR_WORKERS: "2"
     PAYMENT_PROCESSOR_REQUEST_TIMEOUT: "6000"
-    PAYMENT_QUEUE: "1000"
+    PAYMENT_QUEUE: "3000"
     SERVER_PORT: "8080"
     THREAD_POOL_SIZE: "8"
     THREAD_QUEUE_SIZE: "500"
@@ -82,7 +87,7 @@ services:
       POSTGRES_PASSWORD: rinha
     volumes:
       - ./init.sql/init-backend-db.sql:/docker-entrypoint-initdb.d/init.sql
-#      - ./init.sql/init-config.sh:/docker-entrypoint-initdb.d/init-config.sh
+      - ./init.sql/postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
     ports:
       - "5432:5432"
     networks:

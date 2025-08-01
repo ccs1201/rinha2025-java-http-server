@@ -49,7 +49,7 @@ public class App {
     private static void setLogLevel(){
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-        loggerContext.getLogger("com.zaxxer.hikari").setLevel(Level.ERROR);
+        loggerContext.getLogger("com.zaxxer.hikari").setLevel(Level.INFO);
     }
 
 }

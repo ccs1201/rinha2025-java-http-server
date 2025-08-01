@@ -5,7 +5,7 @@
         </encoder>
     </appender>
     <logger name="br.com.ccs" level="INFO" />
-    <logger name="com.zaxxer.hikari" level="OFF" />
+    <logger name="com.zaxxer.hikari" level="INFO" />
     <root level="info">
         <appender-ref ref="STDOUT" />
     </root>

@@ -24,7 +24,6 @@ public class PaymentProcessorWorker {
         return instance;
     }
 
-
     public PaymentProcessorWorker() {
         var workers = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_WORKERS"));
         int queueCapacity = Integer.parseInt(System.getenv("PAYMENT_QUEUE"));

@@ -5,6 +5,7 @@ import br.com.ccs.rinha.repository.JdbcPaymentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -48,13 +49,12 @@ public class PaymentProcessorClient {
         this.repository = JdbcPaymentRepository.getInstance();
 
         this.httpClient = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
+                .version(HttpClient.Version.HTTP_2)
                 .connectTimeout(Duration.ofMillis(100))
                 .build();
 
         defaultUri = URI.create(defaultUrl);
         fallbackUri = URI.create(fallbackUrl);
-
 
 
         log.info("Default service URL: {} ", defaultUrl);
@@ -64,50 +64,55 @@ public class PaymentProcessorClient {
     }
 
 
-
     public void processPayment(PaymentRequest paymentRequest) {
-        postToDefault(paymentRequest);
+        try {
+            postToDefault(paymentRequest);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
     }
 
 
-    private void postToDefault(PaymentRequest paymentRequest) {
+    private void postToDefault(PaymentRequest paymentRequest) throws IOException, InterruptedException {
         paymentRequest.setDefaultTrue();
 
         var request = HttpRequest.newBuilder()
                 .uri(defaultUri)
                 .header(CONTENT_TYPE, CONTENT_TYPE_VALUE)
-                .version(HttpClient.Version.HTTP_1_1)
                 .timeout(timeOut)
                 .POST(HttpRequest.BodyPublishers.ofString(paymentRequest.getJson()))
                 .build();
 
-        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .whenComplete((response, throwable) -> {
-                    if (response.statusCode() != 200) {
-                        postToFallback(paymentRequest);
-                        return;
-                    }
-                    repository.save(paymentRequest);
-                });
+        var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            postToFallback(paymentRequest);
+            return;
+        }
+        save(paymentRequest);
+
     }
 
-    private void postToFallback(PaymentRequest paymentRequest) {
+    private void postToFallback(PaymentRequest paymentRequest) throws IOException, InterruptedException {
         paymentRequest.setDefaultFalse();
         var request = HttpRequest.newBuilder()
                 .uri(fallbackUri)
                 .header(CONTENT_TYPE, CONTENT_TYPE_VALUE)
-                .version(HttpClient.Version.HTTP_1_1)
                 .timeout(timeOut)
                 .POST(HttpRequest.BodyPublishers.ofString(paymentRequest.getJson()))
                 .build();
 
-        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .whenComplete((response, throwable) -> {
-                    if (response.statusCode() != 200) {
-                        processPayment(paymentRequest);
-                        return;
-                    }
-                    repository.save(paymentRequest);
-                });
+        var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            processPayment(paymentRequest);
+            return;
+        }
+        save(paymentRequest);
+    }
+
+    private void save(PaymentRequest paymentRequest) {
+        repository.save(paymentRequest);
     }
 }

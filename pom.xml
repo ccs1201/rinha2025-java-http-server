@@ -89,13 +89,12 @@
                             </execution>
                         </executions>
                         <configuration>
+                            <mainClass>${main-class}</mainClass>
                             <buildArgs>
-<!--                                &#45;&#45;no-fallback-->
                                 --enable-http
-                                -O2
+<!--                                -march=compatibility-->
                                 -march=haswell
                             </buildArgs>
-                            <mainClass>${main-class}</mainClass>
                         </configuration>
                     </plugin>
                 </plugins>
