@@ -40,7 +40,7 @@ public class PaymentProcessorWorker {
     private void startWorkers(int wokerIndex, ArrayBlockingQueue<PaymentRequest> queue) {
         Thread.ofVirtual().name("payment-processor-" + wokerIndex).start(() -> {
             var client = PaymentProcessorClient.getInstance();
-            while (!Thread.currentThread().isInterrupted()) {
+            while (true) {
                 try {
                     client.processPayment(queue.take());
                 } catch (InterruptedException e) {

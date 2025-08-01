@@ -20,16 +20,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.7.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-            <version>6.3.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
@@ -89,12 +79,12 @@
                             </execution>
                         </executions>
                         <configuration>
+                            <mainClass>${main-class}</mainClass>
                             <buildArgs>
 <!--                                &#45;&#45;no-fallback-->
                                 --enable-http
-                                -O2
+                                -march=skylake
                             </buildArgs>
-                            <mainClass>${main-class}</mainClass>
                         </configuration>
                     </plugin>
                 </plugins>

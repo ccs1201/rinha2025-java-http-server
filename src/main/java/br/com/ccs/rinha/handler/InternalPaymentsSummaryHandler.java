@@ -1,0 +1,65 @@
+package br.com.ccs.rinha.handler;
+
+import br.com.ccs.rinha.repository.InMemoeryRespository;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.util.Objects;
+
+public class InternalPaymentsSummaryHandler implements HttpHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(InternalPaymentsSummaryHandler.class);
+
+    private final InMemoeryRespository repository = InMemoeryRespository.getInstance();
+
+
+    @Override
+    public void handle(HttpExchange exchange) throws IOException {
+
+        var q = exchange.getRequestURI().getQuery();
+        try {
+            var from = DateParser.parseFrom(q);
+            var to = DateParser.parseTo(q);
+
+            var response = repository.getSummaryInternal(from, to);
+
+            HandlerUtil.sendResponse(exchange, response.toJson());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static final class DateParser {
+
+        public static OffsetDateTime parseFrom(CharSequence input) {
+
+            if (Objects.isNull(input)) {
+                return OffsetDateTime.now().minusMinutes(10);
+            }
+
+            int start = 5;
+            int end = input.length();
+            for (int i = start; i < input.length(); i++) {
+                if (input.charAt(i) == '&') {
+                    end = i;
+                    break;
+                }
+            }
+            return OffsetDateTime.parse(input.subSequence(start, end));
+        }
+
+        public static OffsetDateTime parseTo(String input) {
+            if (Objects.isNull(input)) {
+                return OffsetDateTime.now();
+            }
+            int start = input.indexOf("&to=") + 4;
+            return OffsetDateTime.parse(input.subSequence(start, input.length()));
+        }
+    }
+
+}

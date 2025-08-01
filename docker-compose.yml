@@ -10,7 +10,7 @@ x-backend-templates:
     deploy:
       resources:
         limits:
-          cpus: "0.6"
+          cpus: "0.65"
           memory: "160MB"
 
   app-env: &app-env
@@ -20,7 +20,7 @@ x-backend-templates:
     PAYMENT_PROCESSOR_WORKERS: "2"
     PAYMENT_QUEUE: "1000"
     SERVER_PORT: "8080"
-    THREAD_POOL_SIZE: "8"
+    THREAD_POOL_SIZE: "12"
     THREAD_QUEUE_SIZE: "500"
 
 #############################################################################################
@@ -43,7 +43,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.1"
+          cpus: "0.2"
           memory: "30MB"
 
   app1:
@@ -52,7 +52,7 @@ services:
     hostname: app1
     environment:
       <<: *app-env
-      warmup_instance: "app2"
+      INSTANCE_ID: "1"
 
   app2:
     <<: *app
@@ -60,7 +60,7 @@ services:
     hostname: app2
     environment:
       <<: *app-env
-      warmup_instance: "app1"
+      INSTANCE_ID: "2"
 
 networks:
   backend:

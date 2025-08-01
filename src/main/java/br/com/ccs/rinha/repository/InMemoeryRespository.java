@@ -6,9 +6,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.Executors;
 
 import static br.com.ccs.rinha.model.input.builder.PaymentRequestBuilder.toEpochNanos;
 
@@ -18,6 +25,26 @@ public class InMemoeryRespository {
     private static final Logger log = LoggerFactory.getLogger(InMemoeryRespository.class);
     private final ConcurrentSkipListMap<Long, PaymentRequest> defaults = new ConcurrentSkipListMap<>();
     private final ConcurrentSkipListMap<Long, PaymentRequest> fallbacks = new ConcurrentSkipListMap<>();
+    private static String SUMMARY_URL;
+    private static final HttpClient HTTP_CLIENT;
+
+    static {
+        var SUMMARY_URL_PATTERN = "http://%s:9999/internal-summary";
+        if (System.getenv("INSTANCE_ID").equals("1")) {
+            SUMMARY_URL = SUMMARY_URL_PATTERN.formatted("localhost").concat("?from=%s&to=%s");
+        } else {
+            SUMMARY_URL = SUMMARY_URL_PATTERN.formatted("backend-api1").concat("?from=%s&to=%s");
+        }
+
+        HTTP_CLIENT = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                .connectTimeout(Duration.ofMillis(200))
+                .executor(Executors.newVirtualThreadPerTaskExecutor())
+                .build();
+
+        log.info("Instace ID: {}", System.getenv("INSTANCE_ID"));
+        log.info("Summary URL: {}", SUMMARY_URL);
+    }
 
     public void save(PaymentRequest paymentRequest) {
         if (!paymentRequest.isDefault) {
@@ -37,10 +64,16 @@ public class InMemoeryRespository {
     }
 
     public PaymentSummary getSummary(OffsetDateTime from, OffsetDateTime to) {
+
+        var call = CompletableFuture.supplyAsync(() -> callOther(from, to));
+
         var defaultSummary = computeDefaultSummary(from, to);
         var fallbackSummary = computeFallbacktSummary(from, to);
+        var localSummary = new PaymentSummary(defaultSummary, fallbackSummary);
 
-        return new PaymentSummary(defaultSummary, fallbackSummary);
+        var otherInstanceSummary = call.join();
+
+        return PaymentSummary.agregate(localSummary, otherInstanceSummary);
     }
 
     private PaymentSummary.Summary computeDefaultSummary(OffsetDateTime from, OffsetDateTime to) {
@@ -71,9 +104,16 @@ public class InMemoeryRespository {
 
     private PaymentSummary callOther(OffsetDateTime from, OffsetDateTime to) {
 
-        //todo chamar outra api
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create(SUMMARY_URL.formatted(from, to)))
+                .GET()
+                .build();
 
-        return null;
+        return HTTP_CLIENT
+                .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(HttpResponse::body)
+                .thenApply(PaymentSummary::fromJson)
+                .join();
     }
 
     public void purge() {
@@ -81,4 +121,9 @@ public class InMemoeryRespository {
         fallbacks.clear();
     }
 
+    public PaymentSummary getSummaryInternal(OffsetDateTime from, OffsetDateTime to) {
+        var defaultSummary = computeDefaultSummary(from, to);
+        var fallbackSummary = computeFallbacktSummary(from, to);
+        return new PaymentSummary(defaultSummary, fallbackSummary);
+    }
 }

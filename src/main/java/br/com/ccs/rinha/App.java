@@ -1,6 +1,7 @@
 package br.com.ccs.rinha;
 
 import br.com.ccs.rinha.config.ExecutorConfig;
+import br.com.ccs.rinha.handler.InternalPaymentsSummaryHandler;
 import br.com.ccs.rinha.handler.PaymentsHandler;
 import br.com.ccs.rinha.handler.PaymentsSummaryHandler;
 import br.com.ccs.rinha.handler.PurgeHandler;
@@ -28,6 +29,7 @@ public class App {
         server.createContext("/payments", new PaymentsHandler());
         server.createContext("/payments-summary", new PaymentsSummaryHandler());
         server.createContext("/purge-payments", new PurgeHandler());
+        server.createContext("/internal-summary", new InternalPaymentsSummaryHandler());
 
         server.start();
         log.info("Servidor iniciado na porta: {} ", port);
