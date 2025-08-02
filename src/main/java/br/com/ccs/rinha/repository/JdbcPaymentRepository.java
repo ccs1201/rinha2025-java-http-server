@@ -76,7 +76,7 @@ public class JdbcPaymentRepository {
                  PreparedStatement stmt = conn.prepareStatement(SQL_INSERT)) {
                 conn.setAutoCommit(false);
 
-                while (!Thread.currentThread().isInterrupted()) {
+                while (true) {
 
                     if (queue.size() >= 15) {
                         long now = System.currentTimeMillis();
