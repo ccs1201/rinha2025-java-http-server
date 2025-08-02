@@ -26,7 +26,6 @@ public class PaymentProcessorClient {
     private final URI fallbackUri;
     private final Duration timeOut;
 
-
     static {
         instance = new PaymentProcessorClient();
     }
@@ -34,7 +33,6 @@ public class PaymentProcessorClient {
     public static PaymentProcessorClient getInstance() {
         return instance;
     }
-
 
     private PaymentProcessorClient() {
         var defaultUrl = System.getenv("PAYMENT_PROCESSOR_DEFAULT_URL").trim();
@@ -63,7 +61,6 @@ public class PaymentProcessorClient {
         log.info("Timeout: {}", timeOut);
     }
 
-
     public void processPayment(PaymentRequest paymentRequest) {
         try {
             postToDefault(paymentRequest);
@@ -72,7 +69,6 @@ public class PaymentProcessorClient {
             throw new RuntimeException(e);
         }
     }
-
 
     private void postToDefault(PaymentRequest paymentRequest) throws IOException, InterruptedException {
         paymentRequest.setDefaultTrue();

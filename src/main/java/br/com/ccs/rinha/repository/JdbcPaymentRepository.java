@@ -62,7 +62,7 @@ public class JdbcPaymentRepository {
         var poolSize = DataSourceFactory.getPoolSize() - 1;
 
         for (int i = 0; i < poolSize; i++) {
-//            var queue = new ArrayBlockingQueue<PaymentRequest>(5_000);
+//            var queue = new ArrayBlockingQueue<PaymentRequest>(1_000);
 //            queues[i] = queue;
             startWorker(i, queue);
         }

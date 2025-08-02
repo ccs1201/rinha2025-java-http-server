@@ -93,7 +93,8 @@
                             <buildArgs>
                                 --enable-http
 <!--                                -march=compatibility-->
-                                -march=haswell
+                                --native-compiler-options=-march=skylake
+                                --native-compiler-options=-mtune=skylake
                             </buildArgs>
                         </configuration>
                     </plugin>

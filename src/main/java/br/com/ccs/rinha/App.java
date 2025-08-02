@@ -33,12 +33,11 @@ public class App {
         server.start();
         log.info("Servidor iniciado na porta: {} ", port);
 
-        // Adiciona um hook de shutdown para fechar o pool de conexões e o executor
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("Desligando servidor...");
-            server.stop(0); // Para o servidor imediatamente
+            server.stop(0);
             if (executor != null) {
-                executor.shutdownNow(); // Encerra o executor das threads
+                executor.shutdownNow();
             }
             DataSourceFactory.close();
 
