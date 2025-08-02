@@ -29,7 +29,7 @@ public class JdbcPaymentRepository {
                     new PaymentSummary.Summary(0, BigDecimal.ZERO));
 
     private static final String SQL_INSERT = """
-            INSERT INTO payments (amount, requested_at, is_default) 
+            INSERT INTO payments (amount, requested_at, is_default)
             VALUES (?, ?, ?)""";
 
     private static final String SQL_SUMMARY = """
