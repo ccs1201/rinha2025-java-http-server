@@ -94,7 +94,7 @@
                                 --enable-http
 <!--                                -march=compatibility-->
                                 --native-compiler-options=-march=skylake
-                                --native-compiler-options=-mtune=skylake
+<!--                                &#45;&#45;native-compiler-options=-mtune=skylake-->
                             </buildArgs>
                         </configuration>
                     </plugin>

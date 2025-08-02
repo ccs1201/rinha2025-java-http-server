@@ -26,6 +26,11 @@ public final class PaymentRequest {
         return json;
     }
 
+    public void resetJson(){
+        requestedAt = System.currentTimeMillis();
+        toJson();
+    }
+
     public static PaymentRequest parse(String json) {
         PaymentRequest req = new PaymentRequest();
         var chars = json.toCharArray();
@@ -41,7 +46,7 @@ public final class PaymentRequest {
         while ((chars[idx] >= '0' && chars[idx] <= '9') || chars[idx] == '.' || chars[idx] == '-') idx++;
 
         req.amount = new BigDecimal(json.substring(startAmount, idx));
-        req.requestedAt = System.currentTimeMillis();
+//        req.requestedAt = System.currentTimeMillis();
         req.setDefaultFalse();
 
         return req;

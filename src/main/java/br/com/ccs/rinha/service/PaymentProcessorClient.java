@@ -41,14 +41,15 @@ public class PaymentProcessorClient {
         var fallbackUrl = System.getenv("PAYMENT_PROCESSOR_FALLBACK_URL").trim();
         fallbackUrl = fallbackUrl.concat("/payments");
         var tOut = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_REQUEST_TIMEOUT"));
+        var connTout = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_CONNECTION_TIMEOUT"));
 
         this.timeOut = Duration.ofMillis(tOut);
 
         this.repository = JdbcPaymentRepository.getInstance();
 
         this.httpClient = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_2)
-                .connectTimeout(Duration.ofMillis(100))
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofMillis(connTout))
                 .build();
 
         defaultUri = URI.create(defaultUrl);
@@ -62,6 +63,7 @@ public class PaymentProcessorClient {
     }
 
     public void processPayment(PaymentRequest paymentRequest) {
+        paymentRequest.resetJson();
         try {
             postToDefault(paymentRequest);
         } catch (Exception e) {
@@ -72,7 +74,6 @@ public class PaymentProcessorClient {
 
     private void postToDefault(PaymentRequest paymentRequest) throws IOException, InterruptedException {
         paymentRequest.setDefaultTrue();
-
         var request = HttpRequest.newBuilder()
                 .uri(defaultUri)
                 .header(CONTENT_TYPE, CONTENT_TYPE_VALUE)
@@ -80,14 +81,14 @@ public class PaymentProcessorClient {
                 .POST(HttpRequest.BodyPublishers.ofString(paymentRequest.getJson()))
                 .build();
 
-        var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-        if (response.statusCode() != 200) {
-            postToFallback(paymentRequest);
-            return;
+        for (int i = 0; i < 5; i++) {
+            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                save(paymentRequest);
+                return;
+            }
         }
-        save(paymentRequest);
-
+        postToFallback(paymentRequest);
     }
 
     private void postToFallback(PaymentRequest paymentRequest) throws IOException, InterruptedException {

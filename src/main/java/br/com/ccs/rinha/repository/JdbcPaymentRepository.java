@@ -28,10 +28,6 @@ public class JdbcPaymentRepository {
             new PaymentSummary(new PaymentSummary.Summary(0, BigDecimal.ZERO),
                     new PaymentSummary.Summary(0, BigDecimal.ZERO));
 
-    private static final String SQL_INSERT = """
-            INSERT INTO payments (amount, requested_at, is_default)
-            VALUES (?, ?, ?)""";
-
     private static final String SQL_SUMMARY = """
             SELECT 
                 SUM(CASE WHEN is_default = true THEN 1 ELSE 0 END) as default_count,
@@ -43,7 +39,6 @@ public class JdbcPaymentRepository {
             """;
 
     private ArrayBlockingQueue<PaymentRequest> queue;
-
 
     public static JdbcPaymentRepository getInstance() {
         if (instance == null) {
@@ -72,16 +67,22 @@ public class JdbcPaymentRepository {
     private void startWorker(int workerIndex, ArrayBlockingQueue<PaymentRequest> queue) {
 
         Thread.ofVirtual().name("repository-worker-" + workerIndex).start(() -> {
+            final var sql = """
+                    INSERT INTO payments (amount, requested_at, is_default)
+                    VALUES (?, ?, ?)""";
+
+            final int BATCH_SIZE = Integer.parseInt(System.getenv("BATCH_SIZE"));
+            final int BATCH_LIMIT = Integer.parseInt(System.getenv("BATCH_LIMIT"));
+
             try (Connection conn = dataSource.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(SQL_INSERT)) {
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
                 conn.setAutoCommit(false);
 
                 while (true) {
-
-                    if (queue.size() >= 15) {
+                    if (queue.size() >= BATCH_LIMIT) {
                         long now = System.currentTimeMillis();
-                        var batch = new ArrayList<PaymentRequest>(150);
-                        queue.drainTo(batch, 150);
+                        var batch = new ArrayList<PaymentRequest>(BATCH_SIZE);
+                        queue.drainTo(batch, BATCH_SIZE);
                         executeInBatch(batch, stmt, conn);
                         log.info("BATCH Size {} Processed in {}ms Queue size {}",
                                 batch.size(), System.currentTimeMillis() - now, queue.size());
@@ -96,9 +97,7 @@ public class JdbcPaymentRepository {
     }
 
     public void save(PaymentRequest pr) {
-        if (!queue.offer(pr)) {
-            log.info("Payment rejected by queues");
-        }
+       queue.offer(pr);
     }
 
     private static void executeInBatch(List<PaymentRequest> batch, PreparedStatement stmt, Connection conn) {
@@ -109,11 +108,10 @@ public class JdbcPaymentRepository {
                 stmt.setBoolean(3, batch.get(i).isDefault);
                 stmt.addBatch();
             }
-
             stmt.executeBatch();
             conn.commit();
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            log.error("BATCH error: {}", e.getMessage(), e);
         }
     }
 
@@ -131,7 +129,6 @@ public class JdbcPaymentRepository {
 
 
     public PaymentSummary getSummary(OffsetDateTime from, OffsetDateTime to) {
-//        sleep();
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(SQL_SUMMARY)) {
 
@@ -153,14 +150,6 @@ public class JdbcPaymentRepository {
         } catch (SQLException e) {
             log.error("Summary error {}", e.getMessage(), e);
             return defaultSummary;
-        }
-    }
-
-    private static void sleep() {
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
     }
 

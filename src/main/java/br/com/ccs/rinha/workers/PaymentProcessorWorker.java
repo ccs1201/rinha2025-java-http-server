@@ -52,6 +52,7 @@ public class PaymentProcessorWorker {
 
     public void offer(byte[] data) {
         var paymentRequest = PaymentRequest.parse(new String(data, StandardCharsets.UTF_8));
+        paymentRequest.requestedAt = System.currentTimeMillis();
         int index = Math.abs(paymentRequest.hashCode()) % queues.length;
         if (!queues[index].offer(paymentRequest)) {
             log.error("Payment rejected by queue {}", index);
