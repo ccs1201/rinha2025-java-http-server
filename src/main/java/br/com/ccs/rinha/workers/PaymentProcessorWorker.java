@@ -9,7 +9,7 @@ public class PaymentProcessorWorker {
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessorWorker.class);
     private static final PaymentProcessorClient client = PaymentProcessorClient.getInstance();
 
-    public PaymentProcessorWorker() {
+    private PaymentProcessorWorker() {
     }
 
     public static void start() {

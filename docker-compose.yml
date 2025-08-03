@@ -33,13 +33,13 @@ x-backend-templates:
     DATASOURCE_USERNAME: "rinha"
     PAYMENT_PROCESSOR_DEFAULT_URL: "http://payment-processor-default:8080"
     PAYMENT_PROCESSOR_FALLBACK_URL: "http://payment-processor-fallback:8080"
-    PAYMENT_PROCESSOR_WORKERS: "20"
+    PAYMENT_PROCESSOR_WORKERS: "1"
     PAYMENT_PROCESSOR_REQUEST_TIMEOUT: "6000"
     PAYMENT_PROCESSOR_CONNECTION_TIMEOUT: "200"
     PAYMENT_QUEUE: "3000"
     SERVER_PORT: "8080"
     SERVER_IO_THREADS: "2"
-    SERVER_WORKER_THREADS: "10"
+    SERVER_WORKER_THREADS: "50"
     THREAD_POOL_SIZE: "10"
     THREAD_QUEUE_SIZE: "500"
 
@@ -60,11 +60,11 @@ services:
     networks:
       - backend
       - payment-processor
-    deploy:
-      resources:
-        limits:
-          cpus: "0.1"
-          memory: "50MB"
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: "0.1"
+#          memory: "50MB"
 
   app1:
     <<: *app
