@@ -66,6 +66,7 @@ public class JdbcPaymentRepository {
     private static void startWorker(int workerIndex, LinkedTransferQueue<PaymentRequest> queue) {
 
         Thread.ofVirtual().name("repository-worker-" + workerIndex).start(() -> {
+            log.info("Repository worker {} started", workerIndex);
             final var sql = """
                     INSERT INTO payments (amount, requested_at, is_default)
                     VALUES (?, ?, ?)""";

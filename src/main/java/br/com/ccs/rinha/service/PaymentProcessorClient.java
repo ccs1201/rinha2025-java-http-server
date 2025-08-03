@@ -89,7 +89,8 @@ public class PaymentProcessorClient {
                 return;
             }
         }
-        postToFallback(paymentRequest);
+//        postToFallback(paymentRequest);
+        PaymentsQueue.offer(paymentRequest);
     }
 
     private void postToFallback(PaymentRequest paymentRequest) throws IOException, InterruptedException {
