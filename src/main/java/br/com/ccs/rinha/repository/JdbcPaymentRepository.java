@@ -17,6 +17,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedTransferQueue;
 
 
 public class JdbcPaymentRepository {
@@ -38,7 +39,7 @@ public class JdbcPaymentRepository {
             WHERE requested_at >= ? AND requested_at <= ?
             """;
 
-    private static ArrayBlockingQueue<PaymentRequest> queue;
+    private static LinkedTransferQueue<PaymentRequest> queue;
 
     public static JdbcPaymentRepository getInstance() {
         if (instance == null) {
@@ -48,7 +49,7 @@ public class JdbcPaymentRepository {
     }
 
     public JdbcPaymentRepository() {
-        queue = new ArrayBlockingQueue<>(5_000);
+        queue = new LinkedTransferQueue<>();
         initialize();
     }
 
@@ -62,7 +63,7 @@ public class JdbcPaymentRepository {
         log.info("JdbcPaymentRepository workers started");
     }
 
-    private static void startWorker(int workerIndex, ArrayBlockingQueue<PaymentRequest> queue) {
+    private static void startWorker(int workerIndex, LinkedTransferQueue<PaymentRequest> queue) {
 
         Thread.ofVirtual().name("repository-worker-" + workerIndex).start(() -> {
             final var sql = """

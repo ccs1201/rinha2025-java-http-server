@@ -2,7 +2,7 @@ package br.com.ccs.rinha.service;
 
 import br.com.ccs.rinha.model.input.PaymentRequest;
 import br.com.ccs.rinha.repository.JdbcPaymentRepository;
-import br.com.ccs.rinha.workers.PaymentProcessorWorker;
+import br.com.ccs.rinha.workers.PaymentsQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +104,7 @@ public class PaymentProcessorClient {
         var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 200) {
-            processPayment(paymentRequest);
+            PaymentsQueue.offer(paymentRequest);
             return;
         }
         save(paymentRequest);
