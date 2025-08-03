@@ -1,6 +1,7 @@
 package br.com.ccs.rinha;
 
 import br.com.ccs.rinha.handler.PathHandler;
+import br.com.ccs.rinha.workers.PaymentProcessorWorker;
 import io.undertow.Undertow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ public class RinhaApp {
         int serverPort = Objects.isNull(envPort) ? 8080 : Integer.parseInt(envPort);
 
         log.info("Starting server on port {}", serverPort);
-        printPromo(1);
+        printMsg(1);
 
         Undertow server = Undertow.builder()
                 .addHttpListener(serverPort, "0.0.0.0")
@@ -29,16 +30,18 @@ public class RinhaApp {
                 .setBufferSize(512)
                 .build();
         server.start();
-        printPromo(1);
+        PaymentProcessorWorker.start();
+        printMsg(1);
         log.info("Server started! Let's play @RinhaDeBackend");
+
     }
 
-    private static void printPromo(int sleep) {
+    private static void printMsg(int sleep) {
         var msg = """
-                 
+                
                  ##########     (Si vis pacem, para bellum)     ##########
                 >>> ccs1201 follow on linkedisney -> https://www.linkedin.com/in/ccs1201/
-                >>> follow on  github -> https://github.com/ccs1201
+                >>> follow on github -> https://github.com/ccs1201
                 """;
         System.out.println(msg);
         try {

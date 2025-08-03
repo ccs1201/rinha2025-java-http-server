@@ -26,7 +26,6 @@ public class PaymentProcessorClient {
     private final URI defaultUri;
     private final URI fallbackUri;
     private final Duration timeOut;
-    private final PaymentProcessorWorker worker = PaymentProcessorWorker.getInstance();
 
     static {
         instance = new PaymentProcessorClient();
