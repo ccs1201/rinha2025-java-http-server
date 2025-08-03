@@ -1,65 +1,31 @@
 package br.com.ccs.rinha.handler;
 
 import br.com.ccs.rinha.repository.JdbcPaymentRepository;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.util.HttpString;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
-import java.util.Objects;
 
 public class PaymentsSummaryHandler implements HttpHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(PaymentsSummaryHandler.class);
+    private static final String CONTENT_TYPE = "application/json";
+    private static final HttpString CONTENT_TYPE_HEADER = new HttpString("Content-Type");
 
     private final JdbcPaymentRepository repository = JdbcPaymentRepository.getInstance();
 
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-
-        var q = exchange.getRequestURI().getQuery();
-        try {
-            var from = DateParser.parseFrom(q);
-            var to = DateParser.parseTo(q);
-
-            var response = repository.getSummary(from, to);
-
-            HandlerUtil.sendResponse(exchange, response.toJson());
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            throw new RuntimeException(e);
-        }
+    public void handleRequest(HttpServerExchange exchange) throws IOException {
+        var from = OffsetDateTime.parse(exchange.getQueryParameters().get("from").getFirst());
+        var to = OffsetDateTime.parse(exchange.getQueryParameters().get("to").getFirst());
+        exchange.setStatusCode(200);
+        exchange.getResponseHeaders().put(CONTENT_TYPE_HEADER, CONTENT_TYPE);
+        exchange.getResponseSender()
+                .send(ByteBuffer
+                        .wrap(repository.getSummary(from, to).toJson().getBytes(StandardCharsets.UTF_8)));
     }
-
-    private static final class DateParser {
-
-        public static OffsetDateTime parseFrom(CharSequence input) {
-
-            if (Objects.isNull(input)) {
-                return OffsetDateTime.now().minusMinutes(10);
-            }
-
-            int start = 5;
-            int end = input.length();
-            for (int i = start; i < input.length(); i++) {
-                if (input.charAt(i) == '&') {
-                    end = i;
-                    break;
-                }
-            }
-            return OffsetDateTime.parse(input.subSequence(start, end));
-        }
-
-        public static OffsetDateTime parseTo(String input) {
-            if (Objects.isNull(input)) {
-                return OffsetDateTime.now();
-            }
-            int start = input.indexOf("&to=") + 4;
-            return OffsetDateTime.parse(input.subSequence(start, input.length()));
-        }
-    }
-
 }

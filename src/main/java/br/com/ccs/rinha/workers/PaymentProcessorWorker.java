@@ -5,7 +5,6 @@ import br.com.ccs.rinha.service.PaymentProcessorClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class PaymentProcessorWorker {
@@ -50,8 +49,16 @@ public class PaymentProcessorWorker {
         });
     }
 
-    public void offer(byte[] data) {
-        var paymentRequest = PaymentRequest.parse(new String(data, StandardCharsets.UTF_8));
+    public void offer(String data) {
+        var paymentRequest = PaymentRequest.parse(data);
+        enqueue(paymentRequest);
+    }
+
+    public void offer(PaymentRequest paymentRequest) {
+        enqueue(paymentRequest);
+    }
+
+    private void enqueue(PaymentRequest paymentRequest) {
         paymentRequest.requestedAt = System.currentTimeMillis();
         int index = Math.abs(paymentRequest.hashCode()) % queues.length;
         if (!queues[index].offer(paymentRequest)) {

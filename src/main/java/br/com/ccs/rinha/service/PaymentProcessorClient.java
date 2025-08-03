@@ -2,6 +2,7 @@ package br.com.ccs.rinha.service;
 
 import br.com.ccs.rinha.model.input.PaymentRequest;
 import br.com.ccs.rinha.repository.JdbcPaymentRepository;
+import br.com.ccs.rinha.workers.PaymentProcessorWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,7 @@ public class PaymentProcessorClient {
     private final URI defaultUri;
     private final URI fallbackUri;
     private final Duration timeOut;
+    private final PaymentProcessorWorker worker = PaymentProcessorWorker.getInstance();
 
     static {
         instance = new PaymentProcessorClient();

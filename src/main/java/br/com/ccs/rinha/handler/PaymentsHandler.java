@@ -1,19 +1,20 @@
 package br.com.ccs.rinha.handler;
 
 import br.com.ccs.rinha.workers.PaymentProcessorWorker;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-
-import java.io.IOException;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
 
 public class PaymentsHandler implements HttpHandler {
 
     private final PaymentProcessorWorker paymentProcessorWorker = PaymentProcessorWorker.getInstance();
+    private static final String EMPTY_RESPONSE = "";
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        var requestBody = exchange.getRequestBody().readAllBytes();
-        HandlerUtil.sendEmptyResponse(exchange);
-        paymentProcessorWorker.offer(requestBody);
+    public void handleRequest(HttpServerExchange exchange) throws Exception {
+        exchange.getRequestReceiver().receiveFullString((ex, data) -> {
+            exchange.setStatusCode(202);
+            exchange.getResponseSender().send(EMPTY_RESPONSE);
+            paymentProcessorWorker.offer(data);
+        });
     }
 }

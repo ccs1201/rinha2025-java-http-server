@@ -38,7 +38,7 @@ public class JdbcPaymentRepository {
             WHERE requested_at >= ? AND requested_at <= ?
             """;
 
-    private ArrayBlockingQueue<PaymentRequest> queue;
+    private static ArrayBlockingQueue<PaymentRequest> queue;
 
     public static JdbcPaymentRepository getInstance() {
         if (instance == null) {
@@ -52,19 +52,17 @@ public class JdbcPaymentRepository {
         initialize();
     }
 
-    private void initialize() {
+    private static void initialize() {
         dataSource = DataSourceFactory.getInstance();
         var poolSize = DataSourceFactory.getPoolSize() - 1;
 
         for (int i = 0; i < poolSize; i++) {
-//            var queue = new ArrayBlockingQueue<PaymentRequest>(1_000);
-//            queues[i] = queue;
             startWorker(i, queue);
         }
         log.info("JdbcPaymentRepository workers started");
     }
 
-    private void startWorker(int workerIndex, ArrayBlockingQueue<PaymentRequest> queue) {
+    private static void startWorker(int workerIndex, ArrayBlockingQueue<PaymentRequest> queue) {
 
         Thread.ofVirtual().name("repository-worker-" + workerIndex).start(() -> {
             final var sql = """
@@ -80,12 +78,12 @@ public class JdbcPaymentRepository {
 
                 while (true) {
                     if (queue.size() >= BATCH_LIMIT) {
-                        long now = System.currentTimeMillis();
+//                        long now = System.currentTimeMillis();
                         var batch = new ArrayList<PaymentRequest>(BATCH_SIZE);
                         queue.drainTo(batch, BATCH_SIZE);
                         executeInBatch(batch, stmt, conn);
-                        log.info("BATCH Size {} Processed in {}ms Queue size {}",
-                                batch.size(), System.currentTimeMillis() - now, queue.size());
+//                        log.info("BATCH Size {} Processed in {}ms Queue size {}",
+//                                batch.size(), System.currentTimeMillis() - now, queue.size());
                     }
 
                     executeSingleInsert(queue.take(), stmt, conn);

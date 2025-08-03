@@ -1,9 +1,9 @@
 x-backend-templates:
   app: &app
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-    image: csouzadocker/java-http-server-postgres
+    #    build:
+    #      context: .
+    #      dockerfile: Dockerfile
+    image: csouzadocker/rinha2025-java-undertow:latest
     depends_on:
       backend-db:
         condition: service_healthy
@@ -14,7 +14,7 @@ x-backend-templates:
       restart_policy:
         condition: on-failure
         delay: 2s
-        max_attempts: 10
+        max_attempts: 1
         window: 5s
       resources:
         limits:
@@ -33,12 +33,14 @@ x-backend-templates:
     DATASOURCE_USERNAME: "rinha"
     PAYMENT_PROCESSOR_DEFAULT_URL: "http://payment-processor-default:8080"
     PAYMENT_PROCESSOR_FALLBACK_URL: "http://payment-processor-fallback:8080"
-    PAYMENT_PROCESSOR_WORKERS: "16"
-    PAYMENT_PROCESSOR_REQUEST_TIMEOUT: "500"
+    PAYMENT_PROCESSOR_WORKERS: "20"
+    PAYMENT_PROCESSOR_REQUEST_TIMEOUT: "6000"
     PAYMENT_PROCESSOR_CONNECTION_TIMEOUT: "200"
     PAYMENT_QUEUE: "3000"
     SERVER_PORT: "8080"
-    THREAD_POOL_SIZE: "16"
+    SERVER_IO_THREADS: "2"
+    SERVER_WORKER_THREADS: "10"
+    THREAD_POOL_SIZE: "10"
     THREAD_QUEUE_SIZE: "500"
 
 #############################################################################################
