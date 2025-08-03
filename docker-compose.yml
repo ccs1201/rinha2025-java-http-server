@@ -3,7 +3,7 @@ x-backend-templates:
     #    build:
     #      context: .
     #      dockerfile: Dockerfile
-    image: csouzadocker/rinha2025-java-undertow:latest
+    image: csouzadocker/rinha2025-java-undertow:v0.0.2
     depends_on:
       backend-db:
         condition: service_healthy

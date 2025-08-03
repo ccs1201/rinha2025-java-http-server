@@ -5,7 +5,6 @@ import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HttpString;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -19,9 +18,18 @@ public class PaymentsSummaryHandler implements HttpHandler {
 
 
     @Override
-    public void handleRequest(HttpServerExchange exchange) throws IOException {
-        var from = OffsetDateTime.parse(exchange.getQueryParameters().get("from").getFirst());
-        var to = OffsetDateTime.parse(exchange.getQueryParameters().get("to").getFirst());
+    public void handleRequest(HttpServerExchange exchange) {
+
+        OffsetDateTime from = null;
+        OffsetDateTime to = null;
+
+        if (exchange.getQueryParameters().size() == 0) {
+            from = OffsetDateTime.now().minusMinutes(5);
+            to = OffsetDateTime.now();
+        } else {
+            from = OffsetDateTime.parse(exchange.getQueryParameters().get("from").getFirst());
+            to = OffsetDateTime.parse(exchange.getQueryParameters().get("to").getFirst());
+        }
         exchange.setStatusCode(200);
         exchange.getResponseHeaders().put(CONTENT_TYPE_HEADER, CONTENT_TYPE);
         exchange.getResponseSender()
