@@ -18,6 +18,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
     ALTER SYSTEM SET synchronous_commit = off;
     ALTER SYSTEM SET fsync = off;
     ALTER SYSTEM SET full_page_writes = off;
+    ALTER SYSTEM SET logging_collector = 'off';
     ALTER SYSTEM SET log_min_duration_statement = '1000ms';
     ALTER SYSTEM SET log_statement = 'none';
     ALTER SYSTEM SET log_duration = off;

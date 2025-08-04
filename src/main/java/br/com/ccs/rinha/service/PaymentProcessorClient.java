@@ -63,8 +63,8 @@ public class PaymentProcessorClient {
         log.info("Timeout: {}", timeOut);
     }
 
-    public void processPayment(PaymentRequest paymentRequest) {
-        paymentRequest.resetJson();
+    public void processPayment(byte[] paymentRequest) {
+//        paymentRequest.resetJson();
         try {
             postToDefault(paymentRequest);
         } catch (Exception e) {
@@ -73,19 +73,18 @@ public class PaymentProcessorClient {
         }
     }
 
-    private void postToDefault(PaymentRequest paymentRequest) throws IOException, InterruptedException {
-        paymentRequest.setDefaultTrue();
+    private void postToDefault(byte[] paymentRequest) throws IOException, InterruptedException {
         var request = HttpRequest.newBuilder()
                 .uri(defaultUri)
                 .header(CONTENT_TYPE, CONTENT_TYPE_VALUE)
                 .timeout(timeOut)
-                .POST(HttpRequest.BodyPublishers.ofString(paymentRequest.getJson()))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(paymentRequest))
                 .build();
 
         for (int i = 0; i < 5; i++) {
             var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                save(paymentRequest);
+                save(PaymentRequest.parseToDefault(paymentRequest));
                 return;
             }
         }
@@ -93,13 +92,12 @@ public class PaymentProcessorClient {
         PaymentsQueue.offer(paymentRequest);
     }
 
-    private void postToFallback(PaymentRequest paymentRequest) throws IOException, InterruptedException {
-        paymentRequest.setDefaultFalse();
+    private void postToFallback(byte[] paymentRequest) throws IOException, InterruptedException {
         var request = HttpRequest.newBuilder()
                 .uri(fallbackUri)
                 .header(CONTENT_TYPE, CONTENT_TYPE_VALUE)
                 .timeout(timeOut)
-                .POST(HttpRequest.BodyPublishers.ofString(paymentRequest.getJson()))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(paymentRequest))
                 .build();
 
         var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -108,7 +106,7 @@ public class PaymentProcessorClient {
             PaymentsQueue.offer(paymentRequest);
             return;
         }
-        save(paymentRequest);
+        save(PaymentRequest.parseToFallback(paymentRequest));
     }
 
     private void save(PaymentRequest paymentRequest) {

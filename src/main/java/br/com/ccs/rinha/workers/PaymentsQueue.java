@@ -6,16 +6,16 @@ import java.util.concurrent.LinkedTransferQueue;
 
 public class PaymentsQueue {
 
-    private static final LinkedTransferQueue<PaymentRequest> QUEUE = new LinkedTransferQueue<>();
+    private static final LinkedTransferQueue<byte[]> QUEUE = new LinkedTransferQueue<>();
 
     private PaymentsQueue() {
     }
 
-    public static void offer(PaymentRequest paymentRequest) {
-        QUEUE.offer(paymentRequest);
+    public static void offer(byte[] paymentRequest) {
+        QUEUE.offer(PaymentRequest.addRequestedAtToJsonBytes(paymentRequest));
     }
 
-    public static PaymentRequest peek() throws InterruptedException {
+    public static byte[] peek() throws InterruptedException {
         return QUEUE.take();
     }
 }
