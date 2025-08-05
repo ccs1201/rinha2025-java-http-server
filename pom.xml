@@ -82,65 +82,65 @@
         </plugins>
     </build>
 
-<!--    <build>-->
-<!--        <plugins>-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-compiler-plugin</artifactId>-->
-<!--                <version>3.13.0</version>-->
-<!--                <configuration>-->
-<!--                    <source>${maven.compiler.source}</source>-->
-<!--                    <target>${maven.compiler.target}</target>-->
-<!--&lt;!&ndash;                    <compilerArgs>&#45;&#45;enable-preview</compilerArgs>&ndash;&gt;-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-jar-plugin</artifactId>-->
-<!--                <version>3.4.2</version>-->
-<!--                <configuration>-->
-<!--                    <archive>-->
-<!--                        <manifest>-->
-<!--                            <addClasspath>true</addClasspath>-->
-<!--                            <mainClass>${main-class}</mainClass>-->
-<!--                        </manifest>-->
-<!--                    </archive>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-<!--        </plugins>-->
-<!--    </build>-->
+    <!--    <build>-->
+    <!--        <plugins>-->
+    <!--            <plugin>-->
+    <!--                <groupId>org.apache.maven.plugins</groupId>-->
+    <!--                <artifactId>maven-compiler-plugin</artifactId>-->
+    <!--                <version>3.13.0</version>-->
+    <!--                <configuration>-->
+    <!--                    <source>${maven.compiler.source}</source>-->
+    <!--                    <target>${maven.compiler.target}</target>-->
+    <!--&lt;!&ndash;                    <compilerArgs>&#45;&#45;enable-preview</compilerArgs>&ndash;&gt;-->
+    <!--                </configuration>-->
+    <!--            </plugin>-->
+    <!--            <plugin>-->
+    <!--                <groupId>org.apache.maven.plugins</groupId>-->
+    <!--                <artifactId>maven-jar-plugin</artifactId>-->
+    <!--                <version>3.4.2</version>-->
+    <!--                <configuration>-->
+    <!--                    <archive>-->
+    <!--                        <manifest>-->
+    <!--                            <addClasspath>true</addClasspath>-->
+    <!--                            <mainClass>${main-class}</mainClass>-->
+    <!--                        </manifest>-->
+    <!--                    </archive>-->
+    <!--                </configuration>-->
+    <!--            </plugin>-->
+    <!--        </plugins>-->
+    <!--    </build>-->
 
-<!--    <profiles>-->
-<!--        <profile>-->
-<!--            <id>native</id>-->
-<!--            <build>-->
-<!--                <plugins>-->
-<!--                    <plugin>-->
-<!--                        <groupId>org.graalvm.buildtools</groupId>-->
-<!--                        <artifactId>native-maven-plugin</artifactId>-->
-<!--                        <version>0.11.0</version>-->
-<!--                        <extensions>true</extensions>-->
-<!--                        <executions>-->
-<!--                            <execution>-->
-<!--                                <id>build-native</id>-->
-<!--                                <goals>-->
-<!--                                    <goal>compile-no-fork</goal>-->
-<!--                                </goals>-->
-<!--                                <phase>package</phase>-->
-<!--                            </execution>-->
-<!--                        </executions>-->
-<!--                        <configuration>-->
-<!--                            <mainClass>${main-class}</mainClass>-->
-<!--                            <buildArgs>-->
-<!--                                &#45;&#45;enable-http-->
-<!--&lt;!&ndash;                                -march=compatibility&ndash;&gt;-->
-<!--                                -march=skylake-->
-<!--                            </buildArgs>-->
-<!--                        </configuration>-->
-<!--                    </plugin>-->
-<!--                </plugins>-->
-<!--            </build>-->
-<!--        </profile>-->
-<!--    </profiles>-->
+    <!--    <profiles>-->
+    <!--        <profile>-->
+    <!--            <id>native</id>-->
+    <!--            <build>-->
+    <!--                <plugins>-->
+    <!--                    <plugin>-->
+    <!--                        <groupId>org.graalvm.buildtools</groupId>-->
+    <!--                        <artifactId>native-maven-plugin</artifactId>-->
+    <!--                        <version>0.11.0</version>-->
+    <!--                        <extensions>true</extensions>-->
+    <!--                        <executions>-->
+    <!--                            <execution>-->
+    <!--                                <id>build-native</id>-->
+    <!--                                <goals>-->
+    <!--                                    <goal>compile-no-fork</goal>-->
+    <!--                                </goals>-->
+    <!--                                <phase>package</phase>-->
+    <!--                            </execution>-->
+    <!--                        </executions>-->
+    <!--                        <configuration>-->
+    <!--                            <mainClass>${main-class}</mainClass>-->
+    <!--                            <buildArgs>-->
+    <!--                                &#45;&#45;enable-http-->
+    <!--&lt;!&ndash;                                -march=compatibility&ndash;&gt;-->
+    <!--                                -march=skylake-->
+    <!--                            </buildArgs>-->
+    <!--                        </configuration>-->
+    <!--                    </plugin>-->
+    <!--                </plugins>-->
+    <!--            </build>-->
+    <!--        </profile>-->
+    <!--    </profiles>-->
 
 </project>

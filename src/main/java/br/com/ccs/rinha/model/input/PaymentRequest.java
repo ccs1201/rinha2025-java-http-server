@@ -8,10 +8,16 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 public final class PaymentRequest {
-    public String correlationId;
     public BigDecimal amount;
     public long requestedAt;
     public boolean isDefault;
+    public byte[] requestData;
+    private byte[] postData;
+
+
+    public PaymentRequest(byte[] requestData) {
+        this.requestData = requestData;
+    }
 
     public void setDefaultFalse() {
         this.isDefault = false;
@@ -21,13 +27,12 @@ public final class PaymentRequest {
         this.isDefault = true;
     }
 
-    public static PaymentRequest parse(String json) {
-        PaymentRequest req = new PaymentRequest();
+    public PaymentRequest parse(String json) {
         var chars = json.toCharArray();
 
         int idx = json.indexOf("\"correlationId\":\"") + 17;
         int end = json.indexOf('"', idx);
-        req.correlationId = json.substring(idx, end);
+//        req.correlationId = json.substring(idx, end);
 
         idx = json.indexOf("\"amount\":", end) + 9;
         while (chars[idx] == ' ' || chars[idx] == '\t') idx++;
@@ -35,20 +40,20 @@ public final class PaymentRequest {
         int startAmount = idx;
         while ((chars[idx] >= '0' && chars[idx] <= '9') || chars[idx] == '.' || chars[idx] == '-') idx++;
 
-        req.amount = new BigDecimal(json.substring(startAmount, idx));
-        req.requestedAt = Instant.parse(json.substring(16, json.lastIndexOf("Z") + 1)).toEpochMilli();
+        this.amount = new BigDecimal(json.substring(startAmount, idx));
+        this.requestedAt = Instant.parse(json.substring(16, json.lastIndexOf("Z") + 1)).toEpochMilli();
 
-        return req;
+        return this;
     }
 
-    public static PaymentRequest parseToDefault(byte[] paymentRequestBytes) {
-        var paymentRequest = parse(new String(paymentRequestBytes, StandardCharsets.UTF_8));
+    public PaymentRequest parseToDefault() {
+        var paymentRequest = parse(new String(postData, StandardCharsets.UTF_8));
         paymentRequest.setDefaultTrue();
         return paymentRequest;
     }
 
-    public static PaymentRequest parseToFallback(byte[] paymentRequestBytes) {
-        var paymentRequest = parse(new String(paymentRequestBytes, StandardCharsets.UTF_8));
+    public PaymentRequest parseToFallback() {
+        var paymentRequest = parse(new String(postData, StandardCharsets.UTF_8));
         paymentRequest.setDefaultFalse();
         return paymentRequest;
     }
@@ -61,24 +66,26 @@ public final class PaymentRequest {
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ISO_INSTANT.withZone(ZoneOffset.UTC);
 
-    public static byte[] addRequestedAtToJsonBytes(byte[] jsonBytes) {
+    public byte[] getPostData() {
+        if (postData == null) {
+            Instant now = Instant.ofEpochMilli(System.currentTimeMillis());
+            var timestamp = FORMATTER.format(now).getBytes(StandardCharsets.UTF_8);
 
-        Instant now = Instant.ofEpochMilli(System.currentTimeMillis());
-        var timestamp = FORMATTER.format(now).getBytes(StandardCharsets.UTF_8);
+            ByteBuffer buffer = BUFFER.get();
+            buffer.clear();
 
-        ByteBuffer buffer = BUFFER.get();
-        buffer.clear();
+            buffer.put(REQUESTED_AT_PREFIX);
+            buffer.put(timestamp);
+            buffer.put(REQUESTED_AT_SUFFIX);
 
-        buffer.put(REQUESTED_AT_PREFIX);
-        buffer.put(timestamp);
-        buffer.put(REQUESTED_AT_SUFFIX);
+            buffer.put(requestData, 1, requestData.length - 1);
 
-        buffer.put(jsonBytes, 1, jsonBytes.length - 1);
+            byte[] result = new byte[buffer.position()];
+            buffer.flip();
+            buffer.get(result);
+            postData = result;
+        }
 
-        byte[] result = new byte[buffer.position()];
-        buffer.flip();
-        buffer.get(result);
-
-        return result;
+        return postData;
     }
 }
