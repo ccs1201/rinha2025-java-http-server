@@ -27,7 +27,7 @@ public class RinhaApp {
                 .setIoThreads(serverIOThreads)
                 .setWorkerThreads(serverWorkerThreads)
                 .setDirectBuffers(true)
-                .setBufferSize(512)
+                .setBufferSize(256)
                 .build();
         server.start();
         PaymentProcessorWorker.start();

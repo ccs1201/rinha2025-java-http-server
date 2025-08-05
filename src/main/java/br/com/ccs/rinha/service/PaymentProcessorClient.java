@@ -64,7 +64,6 @@ public class PaymentProcessorClient {
     }
 
     public void processPayment(byte[] paymentRequest) {
-//        paymentRequest.resetJson();
         try {
             postToDefault(paymentRequest);
         } catch (Exception e) {
@@ -81,15 +80,13 @@ public class PaymentProcessorClient {
                 .POST(HttpRequest.BodyPublishers.ofByteArray(paymentRequest))
                 .build();
 
-        for (int i = 0; i < 5; i++) {
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            var response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
             if (response.statusCode() == 200) {
                 save(PaymentRequest.parseToDefault(paymentRequest));
                 return;
             }
-        }
-//        postToFallback(paymentRequest);
-        PaymentsQueue.offer(paymentRequest);
+
+        PaymentsQueue.requeue(paymentRequest);
     }
 
     private void postToFallback(byte[] paymentRequest) throws IOException, InterruptedException {

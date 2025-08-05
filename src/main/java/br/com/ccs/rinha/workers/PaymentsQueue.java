@@ -18,4 +18,8 @@ public class PaymentsQueue {
     public static byte[] peek() throws InterruptedException {
         return QUEUE.take();
     }
+
+    public static void requeue(byte[] paymentRequest) {
+        QUEUE.offer(paymentRequest);
+    }
 }
