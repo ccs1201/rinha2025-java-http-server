@@ -80,11 +80,11 @@ public class PaymentProcessorClient {
                 .POST(HttpRequest.BodyPublishers.ofByteArray(paymentRequest.getPostData()))
                 .build();
 
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
-            if (response.statusCode() == 200) {
-                save(paymentRequest.parseToDefault());
-                return;
-            }
+        var response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        if (response.statusCode() == 200) {
+            save(paymentRequest.parseToDefault());
+            return;
+        }
 
         PaymentsQueue.requeue(paymentRequest);
     }
