@@ -19,14 +19,6 @@ public final class PaymentRequest {
         this.requestData = requestData;
     }
 
-    public void setDefaultFalse() {
-        this.isDefault = false;
-    }
-
-    public void setDefaultTrue() {
-        this.isDefault = true;
-    }
-
     public PaymentRequest parse(String json) {
 
         var start = System.nanoTime();
@@ -42,13 +34,13 @@ public final class PaymentRequest {
 
     public PaymentRequest parseToDefault() {
         var paymentRequest = parse(new String(postData, StandardCharsets.UTF_8));
-        paymentRequest.setDefaultTrue();
+        paymentRequest.isDefault = true;
         return paymentRequest;
     }
 
     public PaymentRequest parseToFallback() {
         var paymentRequest = parse(new String(postData, StandardCharsets.UTF_8));
-        paymentRequest.setDefaultFalse();
+        paymentRequest.isDefault = false;
         return paymentRequest;
     }
 
