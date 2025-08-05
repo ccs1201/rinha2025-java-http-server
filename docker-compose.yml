@@ -1,8 +1,5 @@
 x-backend-templates:
   app: &app
-    #    build:
-    #      context: .
-    #      dockerfile: Dockerfile
     image: csouzadocker/rinha2025-java-undertow
     depends_on:
       backend-db:
