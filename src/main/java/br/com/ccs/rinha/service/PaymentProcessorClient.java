@@ -63,7 +63,7 @@ public class PaymentProcessorClient {
         log.info("Timeout: {}", timeOut);
     }
 
-    public void processPayment(byte[] paymentRequest) {
+    public void processPayment(PaymentRequest paymentRequest) {
         try {
             postToDefault(paymentRequest);
         } catch (Exception e) {
@@ -72,38 +72,38 @@ public class PaymentProcessorClient {
         }
     }
 
-    private void postToDefault(byte[] paymentRequest) throws IOException, InterruptedException {
+    private void postToDefault(PaymentRequest paymentRequest) throws IOException, InterruptedException {
         var request = HttpRequest.newBuilder()
                 .uri(defaultUri)
                 .header(CONTENT_TYPE, CONTENT_TYPE_VALUE)
                 .timeout(timeOut)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(paymentRequest))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(paymentRequest.getPostData()))
                 .build();
 
             var response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
             if (response.statusCode() == 200) {
-                save(PaymentRequest.parseToDefault(paymentRequest));
+                save(paymentRequest.parseToDefault());
                 return;
             }
 
         PaymentsQueue.requeue(paymentRequest);
     }
 
-    private void postToFallback(byte[] paymentRequest) throws IOException, InterruptedException {
+    private void postToFallback(PaymentRequest paymentRequest) throws IOException, InterruptedException {
         var request = HttpRequest.newBuilder()
                 .uri(fallbackUri)
                 .header(CONTENT_TYPE, CONTENT_TYPE_VALUE)
                 .timeout(timeOut)
-                .POST(HttpRequest.BodyPublishers.ofByteArray(paymentRequest))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(paymentRequest.getPostData()))
                 .build();
 
         var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 200) {
-            PaymentsQueue.offer(paymentRequest);
+            PaymentsQueue.requeue(paymentRequest);
             return;
         }
-        save(PaymentRequest.parseToFallback(paymentRequest));
+        save(paymentRequest.parseToFallback());
     }
 
     private void save(PaymentRequest paymentRequest) {
