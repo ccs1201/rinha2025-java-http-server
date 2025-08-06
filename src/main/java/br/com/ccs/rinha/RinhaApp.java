@@ -19,7 +19,7 @@ public class RinhaApp {
         int serverPort = Objects.isNull(envPort) ? 8080 : Integer.parseInt(envPort);
 
         log.info("Starting server on port {}", serverPort);
-        printMsg(1);
+        printMsg(5);
 
         Undertow server = Undertow.builder()
                 .addHttpListener(serverPort, "0.0.0.0")

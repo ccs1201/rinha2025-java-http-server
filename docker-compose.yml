@@ -15,12 +15,12 @@ x-backend-templates:
         window: 5s
       resources:
         limits:
-          cpus: "0.55"
+          cpus: "0.6"
           memory: "100MB"
 
   app-env: &app-env
-    BATCH_SIZE: "150"
-    BATCH_LIMIT: "15"
+    BATCH_SIZE: "100"
+    BATCH_LIMIT: "10"
     DATASOURCE_CLASS_NAME: "org.postgresql.Driver"
     DATASOURCE_MAXIMUM_POOL_SIZE: "3"
     DATASOURCE_MINIMUM_IDLE: "3"
@@ -56,7 +56,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.2"
+          cpus: "0.1"
           memory: "30MB"
 
   app1:
