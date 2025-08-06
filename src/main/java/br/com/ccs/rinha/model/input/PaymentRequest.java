@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 public final class PaymentRequest {
@@ -21,14 +20,14 @@ public final class PaymentRequest {
 
     public PaymentRequest parse(String json) {
 
-        var start = System.nanoTime();
+//        var start = System.nanoTime();
 
         int startAmount = json.lastIndexOf(':') + 1;
         this.amount = new BigDecimal(json.substring(startAmount, json.length() - 1));
         this.requestedAt = Instant.parse(json.substring(16, json.indexOf('Z') + 1)).toEpochMilli();
 
         var end = System.nanoTime();
-        System.out.printf("Parsing %.3f ms%n", (end - start) / 1_000_000.0);
+//        System.out.printf("Parsing %.3f ms%n", (end - start) / 1_000_000.0);
         return this;
     }
 
@@ -49,7 +48,7 @@ public final class PaymentRequest {
     private static final byte[] REQUESTED_AT_SUFFIX = "\",".getBytes(StandardCharsets.UTF_8);
 
     private static final ThreadLocal<ByteBuffer> BUFFER = ThreadLocal.withInitial(() -> ByteBuffer.allocate(256));
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC);
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
 
     public byte[] getPostData() {
         if (postData == null) {
@@ -57,8 +56,7 @@ public final class PaymentRequest {
             ByteBuffer buffer = BUFFER.get().clear();
             buffer.put(REQUESTED_AT_PREFIX);
 
-            Instant now = Instant.ofEpochMilli(System.currentTimeMillis());
-            buffer.put(FORMATTER.format(now).getBytes(StandardCharsets.UTF_8));
+            buffer.put(FORMATTER.format(Instant.ofEpochMilli(System.currentTimeMillis())).getBytes(StandardCharsets.UTF_8));
 
             buffer.put(REQUESTED_AT_SUFFIX);
 
