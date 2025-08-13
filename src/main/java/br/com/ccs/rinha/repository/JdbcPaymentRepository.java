@@ -80,12 +80,12 @@ public class JdbcPaymentRepository {
                 var batch = new ArrayList<PaymentRequest>(BATCH_SIZE);
                 while (true) {
                     if (queue.size() >= BATCH_LIMIT) {
-                        long now = System.currentTimeMillis();
+//                        long now = System.currentTimeMillis();
                         queue.drainTo(batch, BATCH_SIZE);
                         executeInBatch(batch, stmt, conn);
+//                        log.info("BATCH Size {} Processed in {}ms Queue size {}",
+//                                batch.size(), System.currentTimeMillis() - now, queue.size());
                         batch.clear();
-                        log.info("BATCH Size {} Processed in {}ms Queue size {}",
-                                batch.size(), System.currentTimeMillis() - now, queue.size());
                     }
                     executeSingleInsert(queue.take(), stmt, conn);
                 }

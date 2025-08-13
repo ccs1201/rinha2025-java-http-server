@@ -1,8 +1,5 @@
 x-backend-templates:
   app: &app
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
     image: csouzadocker/java-http-server-postgres
     depends_on:
       backend-db:
@@ -14,7 +11,7 @@ x-backend-templates:
       restart_policy:
         condition: on-failure
         delay: 2s
-        max_attempts: 10
+        max_attempts: 5
         window: 5s
       resources:
         limits:
@@ -22,8 +19,8 @@ x-backend-templates:
           memory: "100MB"
 
   app-env: &app-env
-    BATCH_SIZE: "150"
-    BATCH_LIMIT: "15"
+    BATCH_SIZE: "100"
+    BATCH_LIMIT: "10"
     DATASOURCE_CLASS_NAME: "org.postgresql.Driver"
     DATASOURCE_MAXIMUM_POOL_SIZE: "3"
     DATASOURCE_MINIMUM_IDLE: "3"
@@ -33,13 +30,13 @@ x-backend-templates:
     DATASOURCE_USERNAME: "rinha"
     PAYMENT_PROCESSOR_DEFAULT_URL: "http://payment-processor-default:8080"
     PAYMENT_PROCESSOR_FALLBACK_URL: "http://payment-processor-fallback:8080"
-    PAYMENT_PROCESSOR_WORKERS: "16"
-    PAYMENT_PROCESSOR_REQUEST_TIMEOUT: "500"
-    PAYMENT_PROCESSOR_CONNECTION_TIMEOUT: "200"
+    PAYMENT_PROCESSOR_WORKERS: "10"
+    PAYMENT_PROCESSOR_REQUEST_TIMEOUT: "6000"
+    PAYMENT_PROCESSOR_CONNECTION_TIMEOUT: "50"
     PAYMENT_QUEUE: "3000"
     SERVER_PORT: "8080"
-    THREAD_POOL_SIZE: "16"
-    THREAD_QUEUE_SIZE: "500"
+    THREAD_POOL_SIZE: "20"
+    THREAD_QUEUE_SIZE: "1000"
 
 #############################################################################################
 

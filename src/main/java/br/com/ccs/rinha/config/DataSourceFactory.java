@@ -5,13 +5,11 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
-
 
 public class DataSourceFactory {
 
     private static final Logger log = LoggerFactory.getLogger(DataSourceFactory.class);
-    private static final HikariDataSource  instance;
+    private static final HikariDataSource instance;
     private static int poolSize;
 
     static {
@@ -29,7 +27,7 @@ public class DataSourceFactory {
         return instance;
     }
 
-    private static HikariDataSource  initDataSource() {
+    private static HikariDataSource initDataSource() {
         String minIdleEnv = System.getenv("DATASOURCE_MINIMUM_IDLE").trim();
         String maxPoolEnv = System.getenv("DATASOURCE_MAXIMUM_POOL_SIZE").trim();
         String timeoutEnv = System.getenv("DATASOURCE_TIMEOUT").trim();
@@ -73,7 +71,7 @@ public class DataSourceFactory {
         return new HikariDataSource(config);
     }
 
-    public static void close(){
+    public static void close() {
         instance.close();
         log.info("Hikari DataSource closed.");
     }

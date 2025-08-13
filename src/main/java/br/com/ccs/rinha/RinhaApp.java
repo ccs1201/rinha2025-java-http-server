@@ -5,6 +5,7 @@ import br.com.ccs.rinha.config.ExecutorConfig;
 import br.com.ccs.rinha.handler.PaymentsHandler;
 import br.com.ccs.rinha.handler.PaymentsSummaryHandler;
 import br.com.ccs.rinha.handler.PurgeHandler;
+import br.com.ccs.rinha.workers.PaymentProcessorWorker;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import com.sun.net.httpserver.HttpServer;
@@ -14,8 +15,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-public class App {
-    private static final Logger log = LoggerFactory.getLogger(App.class);
+public class RinhaApp {
+    private static final Logger log = LoggerFactory.getLogger(RinhaApp.class);
 
     public static void main(String[] args) throws IOException {
         setLogLevel();
@@ -30,7 +31,9 @@ public class App {
         server.createContext("/payments-summary", new PaymentsSummaryHandler());
         server.createContext("/purge-payments", new PurgeHandler());
 
+        PaymentProcessorWorker.start();
         server.start();
+
         log.info("Servidor iniciado na porta: {} ", port);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -45,7 +48,7 @@ public class App {
         }));
     }
 
-    private static void setLogLevel(){
+    private static void setLogLevel() {
         LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
         loggerContext.getLogger("com.zaxxer.hikari").setLevel(Level.INFO);

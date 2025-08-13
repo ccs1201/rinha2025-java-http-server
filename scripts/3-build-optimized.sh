@@ -15,11 +15,11 @@ native-image \
   --enable-url-protocols=http,https \
   --enable-http \
   --enable-https \
-  -march=skylake \
+  -march=x86-64-v3 \
   --report-unsupported-elements-at-runtime \
   -H:CLibraryPath=/usr/local/lib \
   -H:Name=output/app-optimized \
-  -cp ../target/rinha2025-java-undertow-1.0-SNAPSHOT-fat.jar \
+  -cp ../target/rinha2025-java-http-server-1.0-SNAPSHOT-fat.jar \
   br.com.ccs.rinha.RinhaApp
 
 

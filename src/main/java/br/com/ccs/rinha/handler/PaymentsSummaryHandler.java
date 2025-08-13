@@ -6,7 +6,6 @@ import com.sun.net.httpserver.HttpHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
@@ -18,14 +17,14 @@ public class PaymentsSummaryHandler implements HttpHandler {
 
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public void handle(HttpExchange exchange) {
 
         var q = exchange.getRequestURI().getQuery();
         try {
             var from = DateParser.parseFrom(q);
             var to = DateParser.parseTo(q);
 
-            Thread.sleep(200);
+//            Thread.sleep(200);
             var response = repository.getSummary(from, to);
 
             HandlerUtil.sendResponse(exchange, response.toJson());

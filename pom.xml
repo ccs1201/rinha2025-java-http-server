@@ -15,7 +15,7 @@
         <graalvm.version>24.0.2</graalvm.version>
         <slf4j.version>2.0.16</slf4j.version>
         <logback-classic.version>1.5.13</logback-classic.version>
-        <main-class>br.com.ccs.rinha.App</main-class>
+        <main-class>br.com.ccs.rinha.RinhaApp</main-class>
     </properties>
 
     <dependencies>
@@ -92,9 +92,8 @@
                             <mainClass>${main-class}</mainClass>
                             <buildArgs>
                                 --enable-http
-<!--                                -march=compatibility-->
-                                --native-compiler-options=-march=skylake
-<!--                                &#45;&#45;native-compiler-options=-mtune=skylake-->
+                                -O3
+<!--                                -march=skylake-->
                             </buildArgs>
                         </configuration>
                     </plugin>
@@ -102,5 +101,64 @@
             </build>
         </profile>
     </profiles>
+
+<!--    <build>-->
+<!--        <plugins>-->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-shade-plugin</artifactId>-->
+<!--                <version>3.5.0</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>shade</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <transformers>-->
+<!--                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
+<!--                                    <mainClass>${main-class}</mainClass>-->
+<!--                                </transformer>-->
+<!--                            </transformers>-->
+<!--                            <shadedArtifactAttached>true</shadedArtifactAttached>-->
+<!--                            <shadedClassifierName>fat</shadedClassifierName>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
+
+<!--            &lt;!&ndash; Compila seu código &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-compiler-plugin</artifactId>-->
+<!--                <version>3.13.0</version>-->
+<!--                <configuration>-->
+<!--                    <source>${maven.compiler.source}</source>-->
+<!--                    <target>${maven.compiler.target}</target>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+
+<!--            &lt;!&ndash; Gera um JAR com o atributo Main-Class no MANIFEST &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-jar-plugin</artifactId>-->
+<!--                <version>3.4.2</version>-->
+<!--                <configuration>-->
+<!--                    <archive>-->
+<!--                        <manifest>-->
+<!--                            <mainClass>${main-class}</mainClass>-->
+<!--                        </manifest>-->
+<!--                    </archive>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+
+<!--            &lt;!&ndash; Plugin opcional do GraalVM &ndash;&gt;-->
+<!--            <plugin>-->
+<!--                <groupId>org.graalvm.buildtools</groupId>-->
+<!--                <artifactId>native-maven-plugin</artifactId>-->
+<!--                <version>0.11.0</version>-->
+<!--            </plugin>-->
+<!--        </plugins>-->
+<!--    </build>-->
 
 </project>
