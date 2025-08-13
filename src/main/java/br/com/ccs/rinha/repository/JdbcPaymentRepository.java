@@ -16,7 +16,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedTransferQueue;
 
 
 public class JdbcPaymentRepository {
@@ -38,7 +38,7 @@ public class JdbcPaymentRepository {
             WHERE requested_at >= ? AND requested_at <= ?
             """;
 
-    private ArrayBlockingQueue<PaymentRequest> queue;
+    private LinkedTransferQueue<PaymentRequest> queue;
 
     public static JdbcPaymentRepository getInstance() {
         if (instance == null) {
@@ -48,7 +48,7 @@ public class JdbcPaymentRepository {
     }
 
     public JdbcPaymentRepository() {
-        queue = new ArrayBlockingQueue<>(5_000);
+        queue = new LinkedTransferQueue<>();
         initialize();
     }
 
@@ -59,12 +59,12 @@ public class JdbcPaymentRepository {
         for (int i = 0; i < poolSize; i++) {
 //            var queue = new ArrayBlockingQueue<PaymentRequest>(1_000);
 //            queues[i] = queue;
-            startWorker(i, queue);
+            startWorker(i);
         }
         log.info("JdbcPaymentRepository workers started");
     }
 
-    private void startWorker(int workerIndex, ArrayBlockingQueue<PaymentRequest> queue) {
+    private void startWorker(int workerIndex) {
 
         Thread.ofVirtual().name("repository-worker-" + workerIndex).start(() -> {
             final var sql = """
@@ -77,17 +77,16 @@ public class JdbcPaymentRepository {
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
                 conn.setAutoCommit(false);
-
+                var batch = new ArrayList<PaymentRequest>(BATCH_SIZE);
                 while (true) {
                     if (queue.size() >= BATCH_LIMIT) {
                         long now = System.currentTimeMillis();
-                        var batch = new ArrayList<PaymentRequest>(BATCH_SIZE);
                         queue.drainTo(batch, BATCH_SIZE);
                         executeInBatch(batch, stmt, conn);
+                        batch.clear();
                         log.info("BATCH Size {} Processed in {}ms Queue size {}",
                                 batch.size(), System.currentTimeMillis() - now, queue.size());
                     }
-
                     executeSingleInsert(queue.take(), stmt, conn);
                 }
             } catch (Exception e) {
@@ -97,7 +96,7 @@ public class JdbcPaymentRepository {
     }
 
     public void save(PaymentRequest pr) {
-       queue.offer(pr);
+        queue.offer(pr);
     }
 
     private static void executeInBatch(List<PaymentRequest> batch, PreparedStatement stmt, Connection conn) {

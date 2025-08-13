@@ -25,12 +25,12 @@ public class PaymentsSummaryHandler implements HttpHandler {
             var from = DateParser.parseFrom(q);
             var to = DateParser.parseTo(q);
 
+            Thread.sleep(200);
             var response = repository.getSummary(from, to);
 
             HandlerUtil.sendResponse(exchange, response.toJson());
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            throw new RuntimeException(e);
         }
     }
 

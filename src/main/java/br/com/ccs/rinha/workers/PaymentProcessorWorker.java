@@ -5,15 +5,14 @@ import br.com.ccs.rinha.service.PaymentProcessorClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedTransferQueue;
 
 public class PaymentProcessorWorker {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentProcessorWorker.class);
     private final PaymentProcessorClient client = PaymentProcessorClient.getInstance();
 
-    private final ArrayBlockingQueue<PaymentRequest>[] queues;
+    private final LinkedTransferQueue<PaymentRequest> queue = new LinkedTransferQueue<>();
     private static PaymentProcessorWorker instance;
 
 
@@ -26,18 +25,14 @@ public class PaymentProcessorWorker {
 
     public PaymentProcessorWorker() {
         var workers = Integer.parseInt(System.getenv("PAYMENT_PROCESSOR_WORKERS"));
-        int queueCapacity = Integer.parseInt(System.getenv("PAYMENT_QUEUE"));
-        queues = new ArrayBlockingQueue[workers];
-
         for (int i = 0; i < workers; i++) {
-            var queue = queues[i] = new ArrayBlockingQueue<>(queueCapacity);
-            startWorkers(i, queue);
+            startWorkers(i);
         }
 
         log.info("Payment processor workers: {}", workers);
     }
 
-    private void startWorkers(int wokerIndex, ArrayBlockingQueue<PaymentRequest> queue) {
+    private void startWorkers(int wokerIndex) {
         Thread.ofVirtual().name("payment-processor-" + wokerIndex).start(() -> {
             while (true) {
                 try {
@@ -51,11 +46,6 @@ public class PaymentProcessorWorker {
     }
 
     public void offer(byte[] data) {
-        var paymentRequest = PaymentRequest.parse(new String(data, StandardCharsets.UTF_8));
-        paymentRequest.requestedAt = System.currentTimeMillis();
-        int index = Math.abs(paymentRequest.hashCode()) % queues.length;
-        if (!queues[index].offer(paymentRequest)) {
-            log.error("Payment rejected by queue {}", index);
-        }
+        queue.offer(new PaymentRequest(data));
     }
 }

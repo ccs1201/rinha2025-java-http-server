@@ -1,64 +1,82 @@
 package br.com.ccs.rinha.model.input;
 
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 public final class PaymentRequest {
-    public String correlationId;
     public BigDecimal amount;
     public long requestedAt;
     public boolean isDefault;
+    public byte[] requestData;
+    private byte[] postData;
+    private boolean isParsed;
 
-    private String json;
 
-    public void setDefaultFalse() {
-        this.isDefault = false;
+    public PaymentRequest(byte[] requestData) {
+        this.requestData = requestData;
     }
 
-    public void setDefaultTrue() {
-        this.isDefault = true;
-    }
 
-    public String getJson() {
-        if (json == null) {
-            toJson();
-        }
-        return json;
-    }
-
-    public void resetJson(){
-        requestedAt = System.currentTimeMillis();
-        toJson();
-    }
-
-    public static PaymentRequest parse(String json) {
-        PaymentRequest req = new PaymentRequest();
+    private void parse() {
+        var json = new String(postData, StandardCharsets.UTF_8);
         var chars = json.toCharArray();
 
-        int idx = json.indexOf("\"correlationId\":\"") + 17;
-        int end = json.indexOf('"', idx);
-        req.correlationId = json.substring(idx, end);
-
-        idx = json.indexOf("\"amount\":", end) + 9;
+        int idx = json.indexOf("\"amount\":") + 9;
         while (chars[idx] == ' ' || chars[idx] == '\t') idx++;
 
         int startAmount = idx;
         while ((chars[idx] >= '0' && chars[idx] <= '9') || chars[idx] == '.' || chars[idx] == '-') idx++;
 
-        req.amount = new BigDecimal(json.substring(startAmount, idx));
-//        req.requestedAt = System.currentTimeMillis();
-        req.setDefaultFalse();
-
-        return req;
+        this.amount = new BigDecimal(json.substring(startAmount, idx));
+        this.requestedAt = Instant.parse(json.substring(16, json.lastIndexOf("Z") + 1)).toEpochMilli();
+        isParsed = true;
     }
 
-    private void toJson() {
-        var sb = new StringBuilder(128);
-        json = sb.append("{")
-                .append("\"correlationId\":\"").append(correlationId).append("\",")
-                .append("\"amount\":").append(amount).append(",")
-                .append("\"requestedAt\":\"").append(Instant.ofEpochMilli(requestedAt)).append("\"")
-                .append("}")
-                .toString();
+    public PaymentRequest parseToDefault() {
+        isDefault = true;
+        if (!isParsed) {
+            parse();
+        }
+        return this;
+    }
+
+    public PaymentRequest parseToFallback() {
+        isDefault = false;
+        if (!isParsed) {
+            parse();
+        }
+        return this;
+    }
+
+
+    private static final byte[] REQUESTED_AT_PREFIX = "{\"requestedAt\":\"".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] REQUESTED_AT_SUFFIX = "\",".getBytes(StandardCharsets.UTF_8);
+
+    private static final ThreadLocal<ByteBuffer> BUFFER = ThreadLocal.withInitial(() -> ByteBuffer.allocate(256));
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC);
+
+    public byte[] getPostData() {
+        if (postData == null) {
+            ByteBuffer buffer = BUFFER.get().clear();
+            buffer.put(REQUESTED_AT_PREFIX);
+
+            Instant now = Instant.ofEpochMilli(System.currentTimeMillis());
+            buffer.put(FORMATTER.format(now).getBytes(StandardCharsets.UTF_8));
+
+            buffer.put(REQUESTED_AT_SUFFIX);
+
+            buffer.put(requestData, 1, requestData.length - 1);
+
+            byte[] result = new byte[buffer.position()];
+            buffer.flip();
+            buffer.get(result);
+            postData = result;
+        }
+
+        return postData;
     }
 }

@@ -40,7 +40,7 @@ public class ExecutorConfig {
                 threadPoolSize,
                 10, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(queueSize, true),
-                Thread.ofVirtual().factory(),
+                Thread.ofVirtual().name("http-server-", 0).factory(),
                 new ThreadPoolExecutor.DiscardPolicy());
     }
 }
