@@ -73,11 +73,11 @@ public class JdbcPaymentRepository {
 
             final int BATCH_SIZE = Integer.parseInt(System.getenv("BATCH_SIZE"));
             final int BATCH_LIMIT = Integer.parseInt(System.getenv("BATCH_LIMIT"));
+            var batch = new ArrayList<PaymentRequest>(BATCH_SIZE);
 
             try (Connection conn = dataSource.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
                 conn.setAutoCommit(false);
-                var batch = new ArrayList<PaymentRequest>(BATCH_SIZE);
                 while (true) {
                     if (queue.size() >= BATCH_LIMIT) {
 //                        long now = System.currentTimeMillis();
@@ -91,6 +91,7 @@ public class JdbcPaymentRepository {
                 }
             } catch (Exception e) {
                 log.error("Worker failure", e);
+                batch.clear();
             }
         });
     }
